@@ -1,5 +1,4 @@
-
-    """Database module with unified interface to all operations."""
+"""Database module with unified interface to all operations."""
 
 from db.base import DatabaseConnection
 from db.media import MediaRepository
