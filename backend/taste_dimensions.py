@@ -1,5 +1,5 @@
 """
-Taste Dimension Definitions for TasteGraph
+Taste Dimension Definitions for Spectra
 
 Each dimension represents a spectrum of aesthetic/emotional qualities that transcend
 media types. These dimensions are used to create direction vectors in embedding space.
@@ -309,7 +309,7 @@ def get_all_dimension_names() -> list[str]:
 
 if __name__ == "__main__":
     # Print summary for verification
-    print("TasteGraph Taste Dimensions\n")
+    print("Spectra Taste Dimensions\n")
     print("=" * 80)
     for i, dim in enumerate(TASTE_DIMENSIONS, 1):
         print(f"\n{i}. {dim['name']} ({dim['id']})")
