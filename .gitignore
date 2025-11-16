@@ -29,6 +29,7 @@
 /coverage
 *.test.js
 *.test.ts
+/backend/test_main.py
 
 # Misc
 .DS_Store

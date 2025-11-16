@@ -165,6 +165,12 @@ class SpectraRecommender:
         item_taste_vector = np.array(item['taste_vector'])
         user_taste_vector = np.array(user_taste_vector)
         
+        # Validate vector lengths
+        if len(user_taste_vector) != 8:
+            raise ValueError(f"Taste vector must have exactly 8 dimensions, got {len(user_taste_vector)}")
+        if len(item_taste_vector) != 8:
+            raise ValueError(f"Item taste vector has invalid length: {len(item_taste_vector)}")
+        
         # Calculate overall similarity
         similarity = float(np.dot(user_taste_vector, item_taste_vector) / 
                           (np.linalg.norm(user_taste_vector) * np.linalg.norm(item_taste_vector)))

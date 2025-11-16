@@ -89,14 +89,32 @@ class MediaRepository:
         if not row:
             return None
         
+        # Convert taste_vector to list if it's a numpy array or pgvector type
+        taste_vector = row[6]
+        if taste_vector is not None:
+            if isinstance(taste_vector, np.ndarray):
+                taste_vector = taste_vector.tolist()
+            elif hasattr(taste_vector, 'tolist'):
+                taste_vector = taste_vector.tolist()
+            elif isinstance(taste_vector, (list, tuple)):
+                taste_vector = list(taste_vector)
+        
+        # Parse metadata if it's a JSON string (shouldn't happen with JSONB, but be safe)
+        metadata = row[5]
+        if isinstance(metadata, str):
+            try:
+                metadata = json.loads(metadata)
+            except (json.JSONDecodeError, TypeError):
+                pass  # Keep as string if parsing fails
+        
         return {
             'id': row[0],
             'title': row[1],
             'media_type': row[2],
             'year': row[3],
             'description': row[4],
-            'metadata': row[5],
-            'taste_vector': row[6]
+            'metadata': metadata,
+            'taste_vector': taste_vector
         }
     
     def get_all_by_type(self, media_type: str, limit: int = 100) -> List[Dict]:
