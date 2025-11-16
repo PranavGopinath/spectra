@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Sparkles, Film, Music, Book } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import { analyzeTaste, getRecommendations, getDimensions, generateResponse as generateLLMResponse, TasteAnalysisResponse, RecommendationsResponse } from '@/lib/api';
 
@@ -112,26 +114,58 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-50 dark:bg-zinc-950">
-      {/* Header */}
-      <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Spectra</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">Cross-domain taste discovery</p>
+    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
+      {/* Header */}
+      <motion.div 
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="relative z-10 border-b border-white/10 glass backdrop-blur-xl px-6 py-6"
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold gradient-text mb-2">Spectra</h1>
+            <p className="text-sm text-white/60 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Cross-domain taste discovery
+            </p>
+          </div>
+          <div className="flex items-center gap-4 text-white/40">
+            <Film className="w-5 h-5" />
+            <Music className="w-5 h-5" />
+            <Book className="w-5 h-5" />
+          </div>
+        </div>
+      </motion.div>
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="max-w-4xl mx-auto">
-          {messages.map((message, index) => (
-            <ChatMessage
-              key={index}
-              role={message.role}
-              content={message.content}
-              tasteAnalysis={message.tasteAnalysis}
-              recommendations={message.recommendations}
-              dimensionNames={dimensionNames}
-            />
-          ))}
+      <div className="flex-1 overflow-y-auto px-6 py-8 relative z-10">
+        <div className="max-w-5xl mx-auto">
+          <AnimatePresence>
+            {messages.map((message, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+              >
+                <ChatMessage
+                  role={message.role}
+                  content={message.content}
+                  tasteAnalysis={message.tasteAnalysis}
+                  recommendations={message.recommendations}
+                  dimensionNames={dimensionNames}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
           
           {isLoading && (
             <ChatMessage role="assistant" isLoading={true} />
@@ -142,33 +176,45 @@ export default function ChatInterface() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6 py-4">
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="flex gap-3">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Describe your taste preferences... (e.g., 'I love dark, complex psychological thrillers with deep characters')"
-              className="flex-1 resize-none rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={2}
-              disabled={isLoading}
-            />
-            <button
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="relative z-10 border-t border-white/10 glass backdrop-blur-xl px-6 py-6"
+      >
+        <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
+          <div className="flex gap-4 items-end">
+            <div className="flex-1 relative">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Describe your taste... What moves you? What resonates?"
+                className="w-full resize-none rounded-2xl border border-white/20 glass backdrop-blur-xl px-6 py-4 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all text-lg"
+                rows={3}
+                disabled={isLoading}
+              />
+              <div className="absolute bottom-3 right-4 text-xs text-white/30">
+                {input.length > 0 && `${input.length} chars`}
+              </div>
+            </div>
+            <motion.button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/50 flex items-center gap-2 hover:shadow-purple-500/70"
             >
-              Send
-            </button>
+              <Send className="w-5 h-5" />
+              {isLoading ? 'Analyzing...' : 'Send'}
+            </motion.button>
           </div>
-          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-            Press Enter to send, Shift+Enter for new line
+          <p className="mt-3 text-xs text-white/40 text-center">
+            Press <kbd className="px-2 py-1 bg-white/10 rounded">Enter</kbd> to send, <kbd className="px-2 py-1 bg-white/10 rounded">Shift+Enter</kbd> for new line
           </p>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }
-

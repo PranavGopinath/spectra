@@ -1,6 +1,7 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { motion } from 'framer-motion';
+import { Sparkles, User } from 'lucide-react';
 import TasteRadar from './TasteRadar';
 import RecommendationCard from './RecommendationCard';
 import { TasteAnalysisResponse, RecommendationItem } from '@/lib/api';
@@ -30,70 +31,158 @@ export default function ChatMessage({
 
   if (isLoading) {
     return (
-      <div className="flex gap-3 mb-6">
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
-          <span className="text-sm">🤖</span>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex gap-4 mb-8"
+      >
+        <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-xl border border-white/10 flex items-center justify-center">
+          <Sparkles className="w-6 h-6 text-purple-400 animate-pulse" />
         </div>
         <div className="flex-1">
-          <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-4">
+          <div className="glass backdrop-blur-xl rounded-2xl p-6 border border-white/10">
             <div className="flex gap-2">
-              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <motion.div
+                className="w-3 h-3 bg-purple-400 rounded-full"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+              />
+              <motion.div
+                className="w-3 h-3 bg-pink-400 rounded-full"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+              />
+              <motion.div
+                className="w-3 h-3 bg-blue-400 rounded-full"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
+              />
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className={`flex gap-3 mb-6 ${isUser ? 'flex-row-reverse' : ''}`}>
-      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-        isUser 
-          ? 'bg-blue-500' 
-          : 'bg-zinc-200 dark:bg-zinc-800'
-      }`}>
-        <span className="text-sm">{isUser ? '👤' : '🤖'}</span>
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`flex gap-4 mb-8 ${isUser ? 'flex-row-reverse' : ''}`}
+    >
+      <motion.div
+        whileHover={{ scale: 1.1 }}
+        className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center ${
+          isUser
+            ? 'bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/50'
+            : 'bg-gradient-to-br from-purple-500/30 to-pink-500/30 backdrop-blur-xl border border-white/10'
+        }`}
+      >
+        {isUser ? (
+          <User className="w-6 h-6 text-white" />
+        ) : (
+          <Sparkles className="w-6 h-6 text-purple-300" />
+        )}
+      </motion.div>
       
       <div className={`flex-1 ${isUser ? 'text-right' : ''}`}>
         {content && (
-          <div className={`inline-block rounded-lg p-4 mb-3 ${
-            isUser
-              ? 'bg-blue-500 text-white'
-              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-          }`}>
-            <p className="whitespace-pre-wrap">{content}</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`inline-block rounded-2xl p-5 mb-4 ${
+              isUser
+                ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/50'
+                : 'glass backdrop-blur-xl border border-white/10 text-white'
+            }`}
+          >
+            <p className="whitespace-pre-wrap leading-relaxed">{content}</p>
+          </motion.div>
         )}
         
         {tasteAnalysis && dimensionNames.length > 0 && (
-          <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 mb-3">
-            <h4 className="font-semibold mb-3 text-zinc-900 dark:text-zinc-100">Your Taste Profile</h4>
-            <TasteRadar 
-              tasteVector={tasteAnalysis.taste_vector} 
-              dimensionNames={dimensionNames}
-            />
-            <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-              {tasteAnalysis.breakdown.map((dim, idx) => (
-                <div key={idx} className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded">
-                  <div className="font-medium text-zinc-900 dark:text-zinc-100">{dim.dimension}</div>
-                  <div className="text-zinc-600 dark:text-zinc-400">{dim.tendency}</div>
-                </div>
-              ))}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass backdrop-blur-xl rounded-3xl border border-white/10 p-6 mb-4 overflow-hidden"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-6 bg-gradient-to-b from-purple-400 to-pink-400 rounded-full" />
+              <h4 className="text-xl font-bold text-white">Your Taste Profile</h4>
             </div>
-          </div>
+            
+            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl p-6 mb-4">
+              <TasteRadar 
+                tasteVector={tasteAnalysis.taste_vector} 
+                dimensionNames={dimensionNames}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {tasteAnalysis.breakdown.map((dim, idx) => {
+                const scoreAbs = Math.abs(dim.score);
+                const isPositive = dim.score > 0;
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    transition={{ delay: 0.3 + idx * 0.05 }}
+                    className="p-4 bg-gradient-to-br from-white/5 to-white/0 rounded-xl border border-white/10 backdrop-blur-sm hover:border-white/20 hover:from-white/10 hover:to-white/5 transition-all cursor-pointer group"
+                  >
+                    <div className="font-semibold text-white text-sm mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 transition-all">
+                      {dim.dimension}
+                    </div>
+                    <div className="text-xs text-white/60 mb-3">{dim.tendency}</div>
+                    <div className="relative h-2 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div
+                        className={`h-full ${
+                          isPositive 
+                            ? 'bg-gradient-to-r from-purple-400 to-pink-400' 
+                            : 'bg-gradient-to-r from-blue-400 to-cyan-400'
+                        }`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${scoreAbs * 100}%` }}
+                        transition={{ delay: 0.4 + idx * 0.05, duration: 0.5 }}
+                      />
+                    </div>
+                    <div className="text-xs text-white/40 mt-2 text-right">
+                      {dim.score > 0 ? '+' : ''}{dim.score.toFixed(2)}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
         )}
         
         {recommendations && (
-          <div className="space-y-3">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="space-y-6"
+          >
             {recommendations.movie && recommendations.movie.length > 0 && (
               <div>
-                <h4 className="font-semibold mb-2 text-zinc-900 dark:text-zinc-100">🎬 Movies</h4>
-                <div className="grid gap-3">
-                  {recommendations.movie.map((item) => (
-                    <RecommendationCard key={item.id} item={item} />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1 h-6 bg-gradient-to-b from-red-400 to-orange-400 rounded-full" />
+                  <h4 className="text-xl font-bold text-white flex items-center gap-2">
+                    <span className="text-2xl">🎬</span> Movies
+                  </h4>
+                </div>
+                <div className="grid gap-4">
+                  {recommendations.movie.map((item, idx) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + idx * 0.1 }}
+                    >
+                      <RecommendationCard item={item} />
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -101,10 +190,22 @@ export default function ChatMessage({
             
             {recommendations.music && recommendations.music.length > 0 && (
               <div>
-                <h4 className="font-semibold mb-2 text-zinc-900 dark:text-zinc-100">🎵 Music</h4>
-                <div className="grid gap-3">
-                  {recommendations.music.map((item) => (
-                    <RecommendationCard key={item.id} item={item} />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1 h-6 bg-gradient-to-b from-green-400 to-emerald-400 rounded-full" />
+                  <h4 className="text-xl font-bold text-white flex items-center gap-2">
+                    <span className="text-2xl">🎵</span> Music
+                  </h4>
+                </div>
+                <div className="grid gap-4">
+                  {recommendations.music.map((item, idx) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + idx * 0.1 }}
+                    >
+                      <RecommendationCard item={item} />
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -112,18 +213,29 @@ export default function ChatMessage({
             
             {recommendations.book && recommendations.book.length > 0 && (
               <div>
-                <h4 className="font-semibold mb-2 text-zinc-900 dark:text-zinc-100">📚 Books</h4>
-                <div className="grid gap-3">
-                  {recommendations.book.map((item) => (
-                    <RecommendationCard key={item.id} item={item} />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-1 h-6 bg-gradient-to-b from-amber-400 to-yellow-400 rounded-full" />
+                  <h4 className="text-xl font-bold text-white flex items-center gap-2">
+                    <span className="text-2xl">📚</span> Books
+                  </h4>
+                </div>
+                <div className="grid gap-4">
+                  {recommendations.book.map((item, idx) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + idx * 0.1 }}
+                    >
+                      <RecommendationCard item={item} />
+                    </motion.div>
                   ))}
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
-
