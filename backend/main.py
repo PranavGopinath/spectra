@@ -8,6 +8,7 @@ import logging
 
 from recommender import SpectraRecommender
 from taste_dimensions import TASTE_DIMENSIONS
+from response_generator import ResponseGenerator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +32,7 @@ app.add_middleware(
 
 # Global recommender instance (loaded once at startup)
 recommender: Optional[SpectraRecommender] = None
+response_generator: Optional[ResponseGenerator] = None
 
 
 # Pydantic Models
@@ -60,6 +62,12 @@ class SimilarRequest(BaseModel):
 class ExplainRequest(BaseModel):
     item_id: str = Field(..., description="ID of the item to explain")
     taste_vector: List[float] = Field(..., min_length=8, max_length=8, description="User's taste vector (8D)")
+
+
+class GenerateResponseRequest(BaseModel):
+    user_input: str = Field(..., description="User's message")
+    taste_analysis: Dict[str, Any] = Field(..., description="Taste analysis result")
+    conversation_history: Optional[List[Dict[str, str]]] = Field(default=None, description="Previous conversation messages")
 
 
 class TasteAnalysisResponse(BaseModel):
@@ -106,8 +114,8 @@ class HealthResponse(BaseModel):
 # Startup/Shutdown Events
 @app.on_event("startup")
 async def startup_event():
-    """Load the recommendation engine at startup."""
-    global recommender
+    """Load the recommendation engine and LLM at startup."""
+    global recommender, response_generator
     logger.info("Loading Spectra recommendation engine...")
     try:
         recommender = SpectraRecommender()
@@ -115,6 +123,15 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to load recommendation engine: {e}")
         raise
+    
+    # Load LLM for response generation (optional, can fail gracefully)
+    try:
+        logger.info("Loading LLM for response generation...")
+        response_generator = ResponseGenerator()
+        logger.info("✓ LLM loaded successfully")
+    except Exception as e:
+        logger.warning(f"Failed to load LLM (will use fallback responses): {e}")
+        response_generator = None
 
 
 @app.on_event("shutdown")
@@ -287,6 +304,30 @@ async def get_stats():
     except Exception as e:
         logger.error(f"Error getting stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/generate-response", tags=["Chat"])
+async def generate_response(request: GenerateResponseRequest):
+    """Generate a contextual chat response using LLM."""
+    if not response_generator:
+        # Fallback to simple response if LLM not available
+        return {
+            "response": "I've analyzed your taste preferences! Here's your taste profile:"
+        }
+    
+    try:
+        response = response_generator.generate_response(
+            user_input=request.user_input,
+            taste_analysis=request.taste_analysis,
+            conversation_history=request.conversation_history
+        )
+        return {"response": response}
+    except Exception as e:
+        logger.error(f"Error generating response: {e}")
+        # Fallback response on error
+        return {
+            "response": "I've analyzed your taste preferences! Here's your taste profile:"
+        }
 
 
 # Run with: uvicorn main:app --reload --host 0.0.0.0 --port 8000
