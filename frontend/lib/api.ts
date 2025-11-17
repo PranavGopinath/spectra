@@ -159,13 +159,14 @@ export async function getItem(itemId: string): Promise<any> {
 }
 
 /**
- * Generate contextual chat response using LLM
+ * Generate contextual intro for recommendations using template-based approach
  */
 export async function generateResponse(
   userInput: string,
   tasteAnalysis: TasteAnalysisResponse,
   conversationHistory?: Array<{ role: string; content: string }>
 ): Promise<string> {
+  // Template-based generation (fast, instant response)
   const response = await fetch(`${API_BASE_URL}/api/generate-response`, {
     method: 'POST',
     headers: {

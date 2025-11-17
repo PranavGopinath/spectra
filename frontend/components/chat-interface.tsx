@@ -67,23 +67,15 @@ export function ChatInterface() {
         top_k: 9
       })
       
-      // Generate contextual response using LLM
-      const conversationHistory = messages
-        .filter(m => m.content)
-        .map(m => ({
-          role: m.type === 'user' ? 'user' : 'assistant',
-          content: m.content
-        }))
-      
+      // Generate contextual intro for recommendations
       let contextualResponse: string
       try {
         contextualResponse = await generateResponse(
           currentInput,
-          tasteAnalysis,
-          conversationHistory
+          tasteAnalysis
         )
       } catch (error) {
-        console.warn('LLM response generation failed, using fallback:', error)
+        console.warn('Response generation failed, using fallback:', error)
         contextualResponse = 'Based on your interests, here are some recommendations I think you\'ll love:'
       }
       

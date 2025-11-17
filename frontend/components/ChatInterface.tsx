@@ -53,20 +53,13 @@ export default function ChatInterface() {
       // Analyze taste
       const tasteAnalysis = await analyzeTaste(userMessage);
       
-      // Generate contextual response using LLM
-      const conversationHistory = messages
-        .filter(m => m.content)
-        .map(m => ({
-          role: m.role,
-          content: m.content!,
-        }));
-      
+      // Generate contextual intro for recommendations
       let contextualResponse: string;
       try {
-        contextualResponse = await generateLLMResponse(userMessage, tasteAnalysis, conversationHistory);
+        contextualResponse = await generateLLMResponse(userMessage, tasteAnalysis);
       } catch (error) {
-        // Fallback if LLM fails
-        console.warn('LLM response generation failed, using fallback:', error);
+        // Fallback if generation fails
+        console.warn('Response generation failed, using fallback:', error);
         contextualResponse = "I've analyzed your taste preferences! Here's your taste profile:";
       }
       

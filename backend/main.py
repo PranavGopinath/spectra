@@ -12,7 +12,6 @@ load_dotenv()
 
 from recommender import SpectraRecommender
 from taste_dimensions import TASTE_DIMENSIONS
-from response_generator import ResponseGenerator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,7 +35,6 @@ app.add_middleware(
 
 # Global recommender instance (loaded once at startup)
 recommender: Optional[SpectraRecommender] = None
-response_generator: Optional[ResponseGenerator] = None
 
 
 # Pydantic Models
@@ -118,8 +116,8 @@ class HealthResponse(BaseModel):
 # Startup/Shutdown Events
 @app.on_event("startup")
 async def startup_event():
-    """Load the recommendation engine and LLM at startup."""
-    global recommender, response_generator
+    """Load the recommendation engine at startup."""
+    global recommender
     logger.info("Loading Spectra recommendation engine...")
     try:
         recommender = SpectraRecommender()
@@ -127,19 +125,6 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to load recommendation engine: {e}")
         raise
-    
-    # Load LLM for response generation (optional, can fail gracefully)
-    try:
-        logger.info("Loading LLM for response generation...")
-        response_generator = ResponseGenerator()
-        if response_generator.is_loaded:
-            logger.info("✓ LLM loaded successfully")
-        else:
-            logger.warning("LLM failed to load (will use fallback responses)")
-            response_generator = None
-    except Exception as e:
-        logger.warning(f"Failed to load LLM (will use fallback responses): {e}")
-        response_generator = None
 
 
 @app.on_event("shutdown")
@@ -316,52 +301,34 @@ async def get_stats():
 
 @app.post("/api/generate-response", tags=["Chat"])
 async def generate_response(request: GenerateResponseRequest):
-    """Generate a brief intro for recommendations using LLM."""
-    if not response_generator or not response_generator.is_loaded:
-        # Fallback to simple response if LLM not available
-        logger.warning("LLM not available, using fallback")
-        return {
-            "response": "Here are some recommendations based on your preferences:",
-            "llm_used": False
-        }
+    """Generate a brief intro for recommendations using template-based approach."""
+    # Template-based generation (fast, instant response)
+    # Extract keywords from user input for personalized intro
+    user_input = request.user_input.lower()
     
-    try:
-        intro = response_generator.generate_intro(
-            user_input=request.user_input,
-            recommendations=None,  # Can pass recommendations if needed
-            conversation_history=request.conversation_history
-        )
-        return {
-            "response": intro,
-            "llm_used": True
-        }
-    except Exception as e:
-        logger.error(f"Error generating response: {e}", exc_info=True)
-        import os
-        return {
-            "response": "Here are some recommendations based on your preferences:",
-            "llm_used": False,
-            "error": str(e) if os.getenv("DEBUG") else None
-        }
-
-
-@app.get("/api/llm/status", tags=["Monitoring"])
-async def get_llm_status():
-    """Get LLM status for monitoring."""
-    if not response_generator:
-        return {
-            "status": "not_loaded",
-            "available": False
-        }
+    # Extract key terms
+    keywords = []
+    common_words = {'i', 'love', 'like', 'enjoy', 'want', 'the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'am'}
+    words = [w for w in user_input.split() if w not in common_words and len(w) > 3]
+    keywords = words[:3]  # Take first 3 meaningful words
     
-    status = response_generator.get_status()
+    # Generate intro based on keywords
+    import random
+    templates = [
+        "Based on your interest in {keyword}, here are some recommendations:",
+        "I found some great {keyword} recommendations for you:",
+        "Here are some {keyword} picks based on your preferences:",
+        "Based on your love of {keyword}, I think you'll enjoy these:",
+    ]
+    
+    if keywords:
+        template = random.choice(templates)
+        intro = template.format(keyword=keywords[0])
+    else:
+        intro = "Here are some recommendations based on your preferences:"
+    
     return {
-        "status": "loaded" if status["loaded"] else "not_loaded",
-        "available": status["loaded"],
-        "model": status["model"],
-        "device": status["device"],
-        "gpu_available": status["gpu_available"],
-        "load_time": status["load_time"]
+        "response": intro
     }
 
 
