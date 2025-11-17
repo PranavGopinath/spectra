@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
 import logging
 from dotenv import load_dotenv
@@ -111,6 +111,61 @@ class StatsResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     model_loaded: bool
+
+
+# User and Rating Models
+class CreateUserRequest(BaseModel):
+    email: EmailStr = Field(..., description="User email address")
+    username: Optional[str] = Field(default=None, description="Optional username")
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    username: Optional[str]
+    created_at: Optional[str]
+
+
+class RatingRequest(BaseModel):
+    item_id: str = Field(..., description="Media item ID")
+    rating: int = Field(..., ge=1, le=5, description="Rating from 1-5")
+    notes: Optional[str] = Field(default=None, description="Optional notes/comments")
+    favorite: Optional[bool] = Field(default=None, description="Mark as favorite")
+    want_to_consume: Optional[bool] = Field(default=None, description="Add to watchlist/reading list")
+
+
+class RatingResponse(BaseModel):
+    id: str
+    user_id: str
+    item_id: str
+    rating: int
+    notes: Optional[str]
+    favorite: Optional[bool]
+    want_to_consume: Optional[bool]
+    created_at: Optional[str]
+    updated_at: Optional[str]
+
+
+class UserRatingWithItem(BaseModel):
+    id: str
+    item_id: str
+    rating: int
+    notes: Optional[str]
+    favorite: Optional[bool]
+    want_to_consume: Optional[bool]
+    created_at: Optional[str]
+    updated_at: Optional[str]
+    item: Dict[str, Any]
+
+
+class UserRatingsResponse(BaseModel):
+    ratings: List[UserRatingWithItem]
+
+
+class UserTasteProfileResponse(BaseModel):
+    taste_vector: List[float]
+    breakdown: List[Dict[str, Any]]
+    num_ratings: int
 
 
 # Startup/Shutdown Events
@@ -296,6 +351,194 @@ async def get_stats():
         }
     except Exception as e:
         logger.error(f"Error getting stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# User Management Endpoints
+@app.post("/api/users", response_model=UserResponse, tags=["Users"])
+async def create_user(request: CreateUserRequest):
+    """Create a new user account."""
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommendation engine not available")
+    
+    try:
+        user = recommender.db.user.create_user(
+            email=request.email,
+            username=request.username
+        )
+        return user
+    except Exception as e:
+        error_msg = str(e).lower()
+        if "duplicate" in error_msg or "unique" in error_msg or "already exists" in error_msg:
+            raise HTTPException(status_code=400, detail="User with this email or username already exists")
+        logger.error(f"Error creating user: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/users/{user_id}", response_model=UserResponse, tags=["Users"])
+async def get_user(user_id: str):
+    """Get user by ID."""
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommendation engine not available")
+    
+    try:
+        user = recommender.db.user.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting user: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Rating Endpoints
+@app.post("/api/users/{user_id}/ratings", response_model=RatingResponse, tags=["Ratings"])
+async def add_rating(user_id: str, request: RatingRequest):
+    """Add or update a rating for an item."""
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommendation engine not available")
+    
+    try:
+        # Verify user exists
+        user = recommender.db.user.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Verify item exists
+        item = recommender.db.media.get_item_by_id(request.item_id)
+        if not item:
+            raise HTTPException(status_code=404, detail="Item not found")
+        
+        # Add/update rating
+        rating = recommender.db.user.add_rating(
+            user_id=user_id,
+            item_id=request.item_id,
+            rating=request.rating,
+            notes=request.notes,
+            favorite=request.favorite,
+            want_to_consume=request.want_to_consume
+        )
+        return rating
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error adding rating: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/users/{user_id}/ratings", response_model=UserRatingsResponse, tags=["Ratings"])
+async def get_user_ratings(user_id: str):
+    """Get all ratings for a user."""
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommendation engine not available")
+    
+    try:
+        # Verify user exists
+        user = recommender.db.user.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        ratings = recommender.db.user.get_user_ratings(user_id)
+        return {"ratings": ratings}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting user ratings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/users/{user_id}/ratings/{item_id}", tags=["Ratings"])
+async def delete_rating(user_id: str, item_id: str):
+    """Delete a rating."""
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommendation engine not available")
+    
+    try:
+        # Verify user exists
+        user = recommender.db.user.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        deleted = recommender.db.user.delete_rating(user_id, item_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Rating not found")
+        
+        return {"success": True, "message": "Rating deleted"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting rating: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# User-Specific Recommendation Endpoints
+@app.get("/api/users/{user_id}/taste-profile", response_model=UserTasteProfileResponse, tags=["Users"])
+async def get_user_taste_profile(user_id: str):
+    """Get user's computed taste profile from ratings."""
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommendation engine not available")
+    
+    try:
+        # Verify user exists
+        user = recommender.db.user.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        profile = recommender.compute_user_taste_profile(user_id)
+        if not profile:
+            raise HTTPException(
+                status_code=404,
+                detail="User has no ratings yet. Rate some items to build your taste profile!"
+            )
+        
+        return {
+            'taste_vector': profile['taste_vector_8d'].tolist(),
+            'breakdown': profile['breakdown'],
+            'num_ratings': profile['num_ratings']
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting user taste profile: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/users/{user_id}/recommendations", tags=["Recommendations"])
+async def get_user_recommendations(
+    user_id: str,
+    media_types: Optional[str] = None,
+    top_k: int = 10,
+    exclude_rated: bool = True
+):
+    """Get personalized recommendations for a user based on their ratings."""
+    if not recommender:
+        raise HTTPException(status_code=503, detail="Recommendation engine not available")
+    
+    try:
+        # Verify user exists
+        user = recommender.db.user.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Parse media_types from comma-separated string
+        media_types_list = None
+        if media_types:
+            media_types_list = [t.strip() for t in media_types.split(',')]
+        
+        results = recommender.recommend_for_user(
+            user_id=user_id,
+            media_types=media_types_list,
+            top_k=top_k,
+            exclude_rated=exclude_rated
+        )
+        
+        return results
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting user recommendations: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
