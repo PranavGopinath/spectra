@@ -6,6 +6,7 @@ import { Send, Sparkles, Film, Music, Book, User, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ChatMessage from './ChatMessage';
 import LoginModal from './LoginModal';
+import { BackgroundVisuals } from './background-visuals';
 import { 
   analyzeTaste, 
   getRecommendations, 
@@ -180,8 +181,11 @@ export default function ChatInterface() {
   // Show loading state while checking auth - this blocks rendering until auth check completes
   if (isCheckingAuth) {
     return (
-      <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden items-center justify-center">
-        <div className="text-white/60">Loading...</div>
+      <div className="relative min-h-screen overflow-hidden">
+        <BackgroundVisuals />
+        <div className="relative z-10 flex items-center justify-center h-screen">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
       </div>
     );
   }
@@ -189,26 +193,19 @@ export default function ChatInterface() {
   // Show login prompt if not authenticated - this should show immediately after auth check
   if (!user && !isCheckingAuth) {
     return (
-      <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-        </div>
-
-        {/* Welcome screen */}
-        <div className="relative z-10 flex items-center justify-center h-full px-6">
+      <div className="relative min-h-screen overflow-hidden">
+        <BackgroundVisuals />
+        <div className="relative z-10 flex items-center justify-center h-screen px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-2xl"
           >
-            <h1 className="text-6xl font-bold gradient-text mb-4">Spectra</h1>
-            <p className="text-xl text-white/80 mb-8">
+            <h1 className="text-6xl font-bold text-foreground mb-4">Spectra</h1>
+            <p className="text-xl text-muted-foreground mb-8">
               Discover movies, music, and books that match your unique taste profile
             </p>
-            <p className="text-white/60 mb-8">
+            <p className="text-muted-foreground mb-8">
               Sign in to get started with personalized recommendations
             </p>
           </motion.div>
@@ -230,44 +227,40 @@ export default function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
+    <div className="relative min-h-screen overflow-hidden">
+      <BackgroundVisuals />
 
-      {/* Header */}
-      <motion.div 
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="relative z-10 border-b border-white/10 glass backdrop-blur-xl px-6 py-6"
-      >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold gradient-text mb-2">Spectra</h1>
-            <p className="text-sm text-white/60 flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Cross-domain taste discovery
-            </p>
+      {/* Main Container */}
+      <div className="relative z-10 flex flex-col h-screen max-w-5xl mx-auto p-4 md:p-6">
+        {/* Header */}
+        <header className="flex items-center justify-between mb-6 animate-fade-in-up">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Sparkles className="w-8 h-8 text-primary" />
+              <div className="absolute inset-0 blur-xl bg-primary/30 -z-10"></div>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-balance">Spectra</h1>
+              <p className="text-sm text-muted-foreground">Your Entertainment Curator</p>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-4 text-white/40">
-              <Film className="w-5 h-5" />
-              <Music className="w-5 h-5" />
-              <Book className="w-5 h-5" />
+          
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-card/50 backdrop-blur-sm border border-border">
+              <Film className="w-4 h-4 text-primary" />
+              <Music className="w-4 h-4 text-secondary" />
+              <Book className="w-4 h-4 text-accent" />
             </div>
             {user ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => router.push('/profile')}
-                  className="px-4 py-2 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all flex items-center gap-2 text-white"
+                  className="px-3 py-1.5 rounded-full bg-card/50 backdrop-blur-sm border border-border hover:bg-card/70 transition-all flex items-center gap-2"
                 >
-                  <User className="w-4 h-4" />
-                  <span className="text-sm font-medium">{user.username || user.email.split('@')[0]}</span>
+                  <User className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">{user.username || user.email.split('@')[0]}</span>
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -278,10 +271,10 @@ export default function ChatInterface() {
                     setUserRatings(new Map());
                     setShowLoginModal(true);
                   }}
-                  className="p-2 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all text-white/60 hover:text-white"
+                  className="p-1.5 rounded-full bg-card/50 backdrop-blur-sm border border-border hover:bg-card/70 transition-all"
                   title="Logout"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4 text-muted-foreground" />
                 </motion.button>
               </div>
             ) : (
@@ -289,27 +282,23 @@ export default function ChatInterface() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowLoginModal(true)}
-                className="px-4 py-2 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all flex items-center gap-2 text-white"
+                className="px-3 py-1.5 rounded-full bg-card/50 backdrop-blur-sm border border-border hover:bg-card/70 transition-all flex items-center gap-2"
               >
-                <User className="w-4 h-4" />
-                <span className="text-sm font-medium">Sign In</span>
+                <User className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium text-foreground">Sign In</span>
               </motion.button>
             )}
           </div>
-        </div>
-      </motion.div>
+        </header>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-8 relative z-10">
-        <div className="max-w-5xl mx-auto">
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto mb-4 space-y-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
           <AnimatePresence>
             {messages.map((message, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <ChatMessage
                   role={message.role}
@@ -320,58 +309,74 @@ export default function ChatInterface() {
                   userRatings={userRatings}
                   onRatingUpdated={() => user && loadUserRatings(user.id)}
                 />
-              </motion.div>
+              </div>
             ))}
           </AnimatePresence>
           
           {isLoading && (
-            <ChatMessage role="assistant" isLoading={true} />
+            <div className="flex justify-start animate-fade-in-up">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                </div>
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              </div>
+            </div>
           )}
           
           <div ref={messagesEndRef} />
         </div>
-      </div>
 
-      {/* Input */}
-      <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="relative z-10 border-t border-white/10 glass backdrop-blur-xl px-6 py-6"
-      >
-        <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
-          <div className="flex gap-4 items-end">
-            <div className="flex-1 relative">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Describe your taste... What moves you? What resonates?"
-                className="w-full resize-none rounded-2xl border border-white/20 glass backdrop-blur-xl px-6 py-4 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all text-lg"
-                rows={3}
-                disabled={isLoading}
-              />
-              <div className="absolute bottom-3 right-4 text-xs text-white/30">
-                {input.length > 0 && `${input.length} chars`}
+        {/* Input Area */}
+        <div className="relative">
+          <form onSubmit={handleSubmit} className="relative">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+              <div className="relative flex items-center gap-2 bg-card/90 backdrop-blur-md border border-border rounded-2xl p-2 shadow-2xl">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="What are you in the mood for?"
+                  className="flex-1 min-h-[44px] max-h-32 resize-none border-0 bg-transparent focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base placeholder:text-muted-foreground py-2 px-3"
+                  disabled={isLoading}
+                  rows={1}
+                />
+                <motion.button
+                  type="submit"
+                  disabled={!input.trim() || isLoading}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/50 transition-all duration-300 flex-shrink-0 p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-4 h-4" />
+                </motion.button>
               </div>
             </div>
-            <motion.button
-              type="submit"
-              disabled={!input.trim() || isLoading}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/50 flex items-center gap-2 hover:shadow-purple-500/70"
+          </form>
+          
+          <div className="flex items-center justify-center gap-2 mt-3 text-xs text-muted-foreground">
+            <span>Try:</span>
+            <button 
+              onClick={() => setInput('Recommend me sci-fi movies like Interstellar')}
+              className="px-2 py-1 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
             >
-              <Send className="w-5 h-5" />
-              {isLoading ? 'Analyzing...' : 'Send'}
-            </motion.button>
+              Sci-fi movies
+            </button>
+            <button 
+              onClick={() => setInput('I need some chill music for studying')}
+              className="px-2 py-1 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+            >
+              Study music
+            </button>
           </div>
-          <p className="mt-3 text-xs text-white/40 text-center">
-            Press <kbd className="px-2 py-1 bg-white/10 rounded">Enter</kbd> to send, <kbd className="px-2 py-1 bg-white/10 rounded">Shift+Enter</kbd> for new line
-          </p>
-        </form>
-      </motion.div>
+        </div>
+      </div>
 
       {/* Login Modal (for logout/login flow) */}
       <LoginModal
