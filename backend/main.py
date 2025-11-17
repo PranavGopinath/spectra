@@ -2,8 +2,10 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 import logging
 from dotenv import load_dotenv
+import os
 
 # Load environment variables from .env file
 load_dotenv()
@@ -23,6 +25,16 @@ app = FastAPI(
     title="Spectra API",
     description="Cross-domain recommendation engine using 8D taste vectors",
     version="1.0.0"
+)
+
+# Session middleware (required for OAuth)
+# Use JWT_SECRET_KEY or generate a random secret for sessions
+SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY", os.getenv("JWT_SECRET_KEY", "change-this-secret-key-in-production"))
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET_KEY,
+    max_age=3600,  # Session expires after 1 hour
+    same_site="lax"
 )
 
 # CORS configuration

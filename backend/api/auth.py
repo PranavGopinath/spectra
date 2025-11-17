@@ -147,7 +147,8 @@ async def oauth_authorize(
     if provider == 'github' and not (GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET):
         raise HTTPException(status_code=500, detail="GitHub OAuth not configured")
     
-    redirect_uri = f"{FRONTEND_URL}/api/auth/callback/{provider}"
+    # OAuth callback goes to backend, which then redirects to frontend
+    redirect_uri = f"{os.getenv('BACKEND_URL', 'http://localhost:8000')}/api/auth/oauth/{provider}/callback"
     return await oauth.__getattr__(provider).authorize_redirect(request, redirect_uri)
 
 

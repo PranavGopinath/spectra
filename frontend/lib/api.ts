@@ -247,23 +247,50 @@ export interface UserTasteProfileResponse {
 }
 
 /**
- * Create a new user account
+ * Register a new user with email and password
  */
-export async function createUser(request: CreateUserRequest): Promise<UserResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/users`, {
+export async function register(email: string, password: string, username?: string): Promise<{ access_token: string; user: UserResponse }> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(request),
+    body: JSON.stringify({ email, password, username }),
   });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: response.statusText }));
-    throw new Error(error.detail || `Failed to create user: ${response.statusText}`);
+    throw new Error(error.detail || `Failed to register: ${response.statusText}`);
   }
 
   return response.json();
+}
+
+/**
+ * Login with email and password
+ */
+export async function login(email: string, password: string): Promise<{ access_token: string; user: UserResponse }> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(error.detail || `Failed to login: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Initiate OAuth flow (redirects to provider)
+ */
+export function initiateOAuth(provider: 'google' | 'github'): void {
+  window.location.href = `${API_BASE_URL}/api/auth/oauth/${provider}/authorize`;
 }
 
 /**

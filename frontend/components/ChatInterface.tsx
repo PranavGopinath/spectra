@@ -16,7 +16,7 @@ import {
   RecommendationsResponse,
   UserResponse 
 } from '@/lib/api';
-import { getCurrentUser, setCurrentUser, isAuthenticated } from '@/lib/auth';
+import { getCurrentUser, setCurrentUser, logout as authLogout } from '@/lib/auth';
 import { getUserRatings } from '@/lib/api';
 
 interface Message {
@@ -273,9 +273,10 @@ export default function ChatInterface() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
-                    setCurrentUser(null);
+                    authLogout();
                     setUser(null);
                     setUserRatings(new Map());
+                    setShowLoginModal(true);
                   }}
                   className="p-2 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all text-white/60 hover:text-white"
                   title="Logout"
