@@ -53,17 +53,6 @@ Your taste profile is built from your ratings—higher ratings influence recomme
 - **Matching**: 384D semantic embeddings for accurate recommendations
 - **Visualization**: 8D taste vectors for interpretable profiles
 
-## API
-
-Main endpoints:
-- `POST /api/users` - Create account
-- `POST /api/users/{id}/ratings` - Rate an item (1-5)
-- `GET /api/users/{id}/recommendations` - Get personalized recommendations
-- `GET /api/users/{id}/taste-profile` - See your taste profile
-- `POST /api/recommend` - Get recommendations from text input
-
-See `PLAN.md` for detailed documentation.
-
 ## Project Structure
 
 ```
