@@ -2,9 +2,22 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, Film, Music, Book } from 'lucide-react';
+import { Send, Sparkles, Film, Music, Book, User, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import ChatMessage from './ChatMessage';
-import { analyzeTaste, getRecommendations, getDimensions, generateResponse as generateLLMResponse, TasteAnalysisResponse, RecommendationsResponse } from '@/lib/api';
+import LoginModal from './LoginModal';
+import { 
+  analyzeTaste, 
+  getRecommendations, 
+  getUserRecommendations,
+  getDimensions, 
+  generateResponse as generateLLMResponse, 
+  TasteAnalysisResponse, 
+  RecommendationsResponse,
+  UserResponse 
+} from '@/lib/api';
+import { getCurrentUser, setCurrentUser, isAuthenticated } from '@/lib/auth';
+import { getUserRatings } from '@/lib/api';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -14,6 +27,11 @@ interface Message {
 }
 
 export default function ChatInterface() {
+  const router = useRouter();
+  const [user, setUser] = useState<UserResponse | null>(null);
+  const [userRatings, setUserRatings] = useState<Map<string, any>>(new Map());
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -26,12 +44,55 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load dimension names on mount
+  // Check authentication on mount - must happen before any rendering
   useEffect(() => {
-    getDimensions().then((dims) => {
-      setDimensionNames(dims.map((d) => d.name));
-    });
+    const checkAuth = () => {
+      const currentUser = getCurrentUser();
+      if (currentUser) {
+        setUser(currentUser);
+        loadUserRatings(currentUser.id);
+      } else {
+        // Show login modal immediately if not authenticated
+        setShowLoginModal(true);
+      }
+      setIsCheckingAuth(false);
+    };
+    
+    // Small delay to ensure component is mounted
+    checkAuth();
   }, []);
+
+  const loadUserRatings = async (userId: string) => {
+    try {
+      const data = await getUserRatings(userId);
+      const ratingsMap = new Map();
+      data.ratings.forEach(rating => {
+        ratingsMap.set(rating.item_id, {
+          rating: rating.rating,
+          notes: rating.notes,
+          favorite: rating.favorite,
+          want_to_consume: rating.want_to_consume,
+        });
+      });
+      setUserRatings(ratingsMap);
+    } catch (error) {
+      console.error('Failed to load user ratings:', error);
+    }
+  };
+
+  // Load dimension names on mount (only if user is authenticated)
+  useEffect(() => {
+    if (user) {
+      getDimensions()
+        .then((dims) => {
+          setDimensionNames(dims.map((d) => d.name));
+        })
+        .catch((error) => {
+          console.error('Failed to load dimensions:', error);
+          // Don't block the UI if dimensions fail to load
+        });
+    }
+  }, [user]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -73,8 +134,18 @@ export default function ChatInterface() {
         },
       ]);
 
-      // Get recommendations
-      const recommendations = await getRecommendations(userMessage, { top_k: 5 });
+      // Get recommendations (use user-specific if logged in)
+      let recommendations: RecommendationsResponse;
+      if (user) {
+        try {
+          recommendations = await getUserRecommendations(user.id, { top_k: 5 });
+        } catch {
+          // Fallback to text-based if user has no ratings
+          recommendations = await getRecommendations(userMessage, { top_k: 5 });
+        }
+      } else {
+        recommendations = await getRecommendations(userMessage, { top_k: 5 });
+      }
       
       // Update last message with recommendations
       setMessages((prev) => {
@@ -106,6 +177,58 @@ export default function ChatInterface() {
     }
   };
 
+  // Show loading state while checking auth - this blocks rendering until auth check completes
+  if (isCheckingAuth) {
+    return (
+      <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden items-center justify-center">
+        <div className="text-white/60">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show login prompt if not authenticated - this should show immediately after auth check
+  if (!user && !isCheckingAuth) {
+    return (
+      <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        </div>
+
+        {/* Welcome screen */}
+        <div className="relative z-10 flex items-center justify-center h-full px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center max-w-2xl"
+          >
+            <h1 className="text-6xl font-bold gradient-text mb-4">Spectra</h1>
+            <p className="text-xl text-white/80 mb-8">
+              Discover movies, music, and books that match your unique taste profile
+            </p>
+            <p className="text-white/60 mb-8">
+              Sign in to get started with personalized recommendations
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Login Modal - forced open, cannot be closed */}
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => {}}
+          canClose={false}
+          onLogin={(newUser) => {
+            setUser(newUser);
+            loadUserRatings(newUser.id);
+            setShowLoginModal(false);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 relative overflow-hidden">
       {/* Animated background elements */}
@@ -129,10 +252,48 @@ export default function ChatInterface() {
               Cross-domain taste discovery
             </p>
           </div>
-          <div className="flex items-center gap-4 text-white/40">
-            <Film className="w-5 h-5" />
-            <Music className="w-5 h-5" />
-            <Book className="w-5 h-5" />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 text-white/40">
+              <Film className="w-5 h-5" />
+              <Music className="w-5 h-5" />
+              <Book className="w-5 h-5" />
+            </div>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => router.push('/profile')}
+                  className="px-4 py-2 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all flex items-center gap-2 text-white"
+                >
+                  <User className="w-4 h-4" />
+                  <span className="text-sm font-medium">{user.username || user.email.split('@')[0]}</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setCurrentUser(null);
+                    setUser(null);
+                    setUserRatings(new Map());
+                  }}
+                  className="p-2 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all text-white/60 hover:text-white"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </motion.button>
+              </div>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowLoginModal(true)}
+                className="px-4 py-2 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all flex items-center gap-2 text-white"
+              >
+                <User className="w-4 h-4" />
+                <span className="text-sm font-medium">Sign In</span>
+              </motion.button>
+            )}
           </div>
         </div>
       </motion.div>
@@ -155,6 +316,8 @@ export default function ChatInterface() {
                   tasteAnalysis={message.tasteAnalysis}
                   recommendations={message.recommendations}
                   dimensionNames={dimensionNames}
+                  userRatings={userRatings}
+                  onRatingUpdated={() => user && loadUserRatings(user.id)}
                 />
               </motion.div>
             ))}
@@ -208,6 +371,18 @@ export default function ChatInterface() {
           </p>
         </form>
       </motion.div>
+
+      {/* Login Modal (for logout/login flow) */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        canClose={true}
+        onLogin={(newUser) => {
+          setUser(newUser);
+          loadUserRatings(newUser.id);
+          setShowLoginModal(false);
+        }}
+      />
     </div>
   );
 }

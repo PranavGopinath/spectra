@@ -13,15 +13,22 @@ class UserRepository:
         self.conn = db_connection.conn
         self.cursor = db_connection.cursor
     
-    def create_user(self, email: str, username: Optional[str] = None) -> Dict:
+    def create_user(
+        self, 
+        email: str, 
+        username: Optional[str] = None,
+        password_hash: Optional[str] = None,
+        oauth_provider: Optional[str] = None,
+        oauth_id: Optional[str] = None
+    ) -> Dict:
         """Create a new user."""
         user_id = uuid.uuid4()
         query = """
-            INSERT INTO users (id, email, username)
-            VALUES (%s, %s, %s)
-            RETURNING id, email, username, created_at
+            INSERT INTO users (id, email, username, password_hash, oauth_provider, oauth_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id, email, username, created_at, oauth_provider
         """
-        self.cursor.execute(query, (str(user_id), email, username))
+        self.cursor.execute(query, (str(user_id), email, username, password_hash, oauth_provider, oauth_id))
         row = self.cursor.fetchone()
         self.conn.commit()
         
@@ -29,28 +36,17 @@ class UserRepository:
             'id': str(row[0]),
             'email': row[1],
             'username': row[2],
-            'created_at': row[3].isoformat() if row[3] else None
+            'created_at': row[3].isoformat() if row[3] else None,
+            'oauth_provider': row[4]
         }
     
-    def get_user_by_id(self, user_id: str) -> Optional[Dict]:
-        """Get user by ID."""
-        query = "SELECT id, email, username, created_at FROM users WHERE id = %s"
-        self.cursor.execute(query, (user_id,))
-        row = self.cursor.fetchone()
-        
-        if not row:
-            return None
-        
-        return {
-            'id': str(row[0]),
-            'email': row[1],
-            'username': row[2],
-            'created_at': row[3].isoformat() if row[3] else None
-        }
-    
-    def get_user_by_email(self, email: str) -> Optional[Dict]:
-        """Get user by email."""
-        query = "SELECT id, email, username, created_at FROM users WHERE email = %s"
+    def get_user_with_password(self, email: str) -> Optional[Dict]:
+        """Get user by email including password hash."""
+        query = """
+            SELECT id, email, username, password_hash, oauth_provider, oauth_id, created_at 
+            FROM users 
+            WHERE email = %s
+        """
         self.cursor.execute(query, (email,))
         row = self.cursor.fetchone()
         
@@ -61,7 +57,65 @@ class UserRepository:
             'id': str(row[0]),
             'email': row[1],
             'username': row[2],
-            'created_at': row[3].isoformat() if row[3] else None
+            'password_hash': row[3],
+            'oauth_provider': row[4],
+            'oauth_id': row[5],
+            'created_at': row[6].isoformat() if row[6] else None
+        }
+    
+    def get_user_by_oauth(self, provider: str, oauth_id: str) -> Optional[Dict]:
+        """Get user by OAuth provider and ID."""
+        query = """
+            SELECT id, email, username, created_at, oauth_provider 
+            FROM users 
+            WHERE oauth_provider = %s AND oauth_id = %s
+        """
+        self.cursor.execute(query, (provider, oauth_id))
+        row = self.cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        return {
+            'id': str(row[0]),
+            'email': row[1],
+            'username': row[2],
+            'created_at': row[3].isoformat() if row[3] else None,
+            'oauth_provider': row[4]
+        }
+    
+    def get_user_by_id(self, user_id: str) -> Optional[Dict]:
+        """Get user by ID."""
+        query = "SELECT id, email, username, created_at, oauth_provider FROM users WHERE id = %s"
+        self.cursor.execute(query, (user_id,))
+        row = self.cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        return {
+            'id': str(row[0]),
+            'email': row[1],
+            'username': row[2],
+            'created_at': row[3].isoformat() if row[3] else None,
+            'oauth_provider': row[4]
+        }
+    
+    def get_user_by_email(self, email: str) -> Optional[Dict]:
+        """Get user by email (without sensitive data)."""
+        query = "SELECT id, email, username, created_at, oauth_provider FROM users WHERE email = %s"
+        self.cursor.execute(query, (email,))
+        row = self.cursor.fetchone()
+        
+        if not row:
+            return None
+        
+        return {
+            'id': str(row[0]),
+            'email': row[1],
+            'username': row[2],
+            'created_at': row[3].isoformat() if row[3] else None,
+            'oauth_provider': row[4]
         }
     
     def add_rating(

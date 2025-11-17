@@ -98,7 +98,7 @@ export async function getRecommendations(
  * Get all taste dimensions
  */
 export async function getDimensions(): Promise<DimensionInfo[]> {
-  const response = await fetch(`${API_BASE_URL}/api/dimensions`);
+  const response = await fetch(`${API_BASE_URL}/api/taste/dimensions`);
 
   if (!response.ok) {
     throw new Error(`Failed to get dimensions: ${response.statusText}`);
@@ -185,5 +185,191 @@ export async function generateResponse(
 
   const data = await response.json();
   return data.response;
+}
+
+// User Management APIs
+export interface CreateUserRequest {
+  email: string;
+  username?: string;
+}
+
+export interface UserResponse {
+  id: string;
+  email: string;
+  username?: string;
+  created_at?: string;
+}
+
+export interface RatingRequest {
+  item_id: string;
+  rating: number; // 1-5
+  notes?: string;
+  favorite?: boolean;
+  want_to_consume?: boolean;
+}
+
+export interface RatingResponse {
+  id: string;
+  user_id: string;
+  item_id: string;
+  rating: number;
+  notes?: string;
+  favorite?: boolean;
+  want_to_consume?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserRatingWithItem extends RatingResponse {
+  item: {
+    id: string;
+    title: string;
+    media_type: string;
+    year?: number;
+    description: string;
+    metadata: Record<string, any>;
+  };
+}
+
+export interface UserRatingsResponse {
+  ratings: UserRatingWithItem[];
+}
+
+export interface UserTasteProfileResponse {
+  taste_vector: number[];
+  breakdown: Array<{
+    dimension: string;
+    score: number;
+    tendency: string;
+    description: string;
+  }>;
+  num_ratings: number;
+}
+
+/**
+ * Create a new user account
+ */
+export async function createUser(request: CreateUserRequest): Promise<UserResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(error.detail || `Failed to create user: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Get user by ID
+ */
+export async function getUser(userId: string): Promise<UserResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/users/${userId}`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to get user: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Add or update a rating
+ */
+export async function addRating(
+  userId: string,
+  rating: RatingRequest
+): Promise<RatingResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/users/${userId}/ratings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(rating),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(error.detail || `Failed to add rating: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Get all ratings for a user
+ */
+export async function getUserRatings(userId: string): Promise<UserRatingsResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/users/${userId}/ratings`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to get user ratings: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Delete a rating
+ */
+export async function deleteRating(userId: string, itemId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/users/${userId}/ratings/${itemId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete rating: ${response.statusText}`);
+  }
+}
+
+/**
+ * Get user's taste profile computed from ratings
+ */
+export async function getUserTasteProfile(userId: string): Promise<UserTasteProfileResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/users/${userId}/taste-profile`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to get user taste profile: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Get personalized recommendations for a user based on their ratings
+ */
+export async function getUserRecommendations(
+  userId: string,
+  options?: {
+    media_types?: string[];
+    top_k?: number;
+    exclude_rated?: boolean;
+  }
+): Promise<RecommendationsResponse> {
+  const params = new URLSearchParams();
+  if (options?.media_types) {
+    params.append('media_types', options.media_types.join(','));
+  }
+  if (options?.top_k) {
+    params.append('top_k', options.top_k.toString());
+  }
+  if (options?.exclude_rated !== undefined) {
+    params.append('exclude_rated', options.exclude_rated.toString());
+  }
+
+  const url = `${API_BASE_URL}/api/users/${userId}/recommendations${params.toString() ? '?' + params.toString() : ''}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to get user recommendations: ${response.statusText}`);
+  }
+
+  return response.json();
 }
 

@@ -17,6 +17,13 @@ interface ChatMessageProps {
   };
   dimensionNames?: string[];
   isLoading?: boolean;
+  userRatings?: Map<string, {
+    rating: number;
+    notes?: string;
+    favorite?: boolean;
+    want_to_consume?: boolean;
+  }>;
+  onRatingUpdated?: () => void;
 }
 
 export default function ChatMessage({
@@ -26,6 +33,8 @@ export default function ChatMessage({
   recommendations,
   dimensionNames = [],
   isLoading = false,
+  userRatings,
+  onRatingUpdated,
 }: ChatMessageProps) {
   const isUser = role === 'user';
 
@@ -181,7 +190,11 @@ export default function ChatMessage({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 + idx * 0.1 }}
                     >
-                      <RecommendationCard item={item} />
+                      <RecommendationCard 
+                        item={item} 
+                        existingRating={userRatings?.get(item.id)}
+                        onRatingUpdated={onRatingUpdated}
+                      />
                     </motion.div>
                   ))}
                 </div>
@@ -204,7 +217,11 @@ export default function ChatMessage({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 + idx * 0.1 }}
                     >
-                      <RecommendationCard item={item} />
+                      <RecommendationCard 
+                        item={item} 
+                        existingRating={userRatings?.get(item.id)}
+                        onRatingUpdated={onRatingUpdated}
+                      />
                     </motion.div>
                   ))}
                 </div>
@@ -227,7 +244,11 @@ export default function ChatMessage({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 + idx * 0.1 }}
                     >
-                      <RecommendationCard item={item} />
+                      <RecommendationCard 
+                        item={item} 
+                        existingRating={userRatings?.get(item.id)}
+                        onRatingUpdated={onRatingUpdated}
+                      />
                     </motion.div>
                   ))}
                 </div>

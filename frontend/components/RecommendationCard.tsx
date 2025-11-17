@@ -1,23 +1,33 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Sparkles } from 'lucide-react';
+import { TrendingUp, Sparkles, Star } from 'lucide-react';
+import { getCurrentUser } from '@/lib/auth';
+import RatingDialog from './RatingDialog';
+import { RecommendationItem } from '@/lib/api';
 
 interface RecommendationCardProps {
-  item: {
-    id: string;
-    title: string;
-    media_type: string;
-    year?: number;
-    description: string;
-    similarity: number;
-    metadata?: Record<string, any>;
-  };
+  item: RecommendationItem;
   onSelect?: (itemId: string) => void;
+  existingRating?: {
+    rating: number;
+    notes?: string;
+    favorite?: boolean;
+    want_to_consume?: boolean;
+  };
+  onRatingUpdated?: () => void;
 }
 
-export default function RecommendationCard({ item, onSelect }: RecommendationCardProps) {
+export default function RecommendationCard({ 
+  item, 
+  onSelect, 
+  existingRating,
+  onRatingUpdated 
+}: RecommendationCardProps) {
   const similarityPercent = Math.round(item.similarity * 100);
+  const user = getCurrentUser();
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
   
   // Get media type styling
   const mediaTypeStyles: Record<string, { gradient: string; icon: string; color: string }> = {
@@ -97,7 +107,7 @@ export default function RecommendationCard({ item, onSelect }: RecommendationCar
             </p>
             
             {/* Similarity bar */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-3">
               <div className="flex-1 h-2.5 bg-white/10 rounded-full overflow-hidden">
                 <motion.div
                   className={`h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full`}
@@ -113,6 +123,22 @@ export default function RecommendationCard({ item, onSelect }: RecommendationCar
                 </span>
               </div>
             </div>
+
+            {/* Rating button */}
+            {user && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowRatingDialog(true);
+                }}
+                className="w-full px-4 py-2 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-2 text-white/80 hover:text-white"
+              >
+                <Star className={`w-4 h-4 ${existingRating ? 'text-yellow-400 fill-yellow-400' : ''}`} />
+                <span className="text-sm font-medium">
+                  {existingRating ? `Rated ${existingRating.rating}/5` : 'Rate this'}
+                </span>
+              </button>
+            )}
           </div>
         </div>
         
@@ -122,6 +148,20 @@ export default function RecommendationCard({ item, onSelect }: RecommendationCar
         {/* Corner accent */}
         <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-500/20 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
+
+      {/* Rating Dialog */}
+      {user && (
+        <RatingDialog
+          isOpen={showRatingDialog}
+          onClose={() => setShowRatingDialog(false)}
+          item={item}
+          existingRating={existingRating}
+          onRatingSaved={() => {
+            setShowRatingDialog(false);
+            onRatingUpdated?.();
+          }}
+        />
+      )}
     </motion.div>
   );
 }

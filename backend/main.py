@@ -12,7 +12,7 @@ from recommender import SpectraRecommender
 from dependencies import set_recommender
 
 # Import API routers
-from api import users, ratings, recommendations, taste, items, general
+from api import users, ratings, recommendations, taste, items, general, auth
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +36,7 @@ app.add_middleware(
 
 # Register API routes
 app.include_router(general.router, tags=["General"])
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(taste.router, prefix="/api/taste", tags=["Taste"])
 app.include_router(recommendations.router, prefix="/api/recommend", tags=["Recommendations"])
 app.include_router(recommendations.router, prefix="/api", tags=["Chat"])  # For /api/generate-response

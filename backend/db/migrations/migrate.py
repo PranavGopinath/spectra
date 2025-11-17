@@ -8,7 +8,7 @@ from db.base import DatabaseConnection
 
 def get_migration_files():
     """Get all migration files in order."""
-    migrations_dir = Path(__file__).parent / 'migrations'
+    migrations_dir = Path(__file__).parent
     if not migrations_dir.exists():
         return []
     
