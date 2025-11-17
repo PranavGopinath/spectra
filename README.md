@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Spectra
 
-## Getting Started
+A recommendation engine that finds movies, music, and books with similar vibes—even if they're completely different genres. Rate what you love, and discover new favorites across all media types.
 
-First, run the development server:
+## What It Does
+
+Instead of matching by genre ("thriller" → "thriller"), Spectra matches by aesthetic qualities. Love dark, complex psychological thrillers? You might also enjoy dark ambient music or dark, layered novels—even if they're not thrillers.
+
+**Key Features:**
+- Rate items (1-5 stars) to build your taste profile
+- Get personalized recommendations across movies, music, and books
+- See your taste visualized as an 8-dimensional radar chart
+- Discover content that *feels* similar, regardless of type
+
+## Quick Start
+
+### Backend
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd backend
+python3 -m venv ../.venv
+source ../.venv/bin/activate
+pip install -r requirements.txt
+cd ..
+docker-compose up -d  # Start PostgreSQL
+cd backend
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Frontend
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Visit `http://localhost:3000`
 
-## Learn More
+## How It Works
 
-To learn more about Next.js, take a look at the following resources:
+1. **Rate items** you've watched/listened to/read (1-5 stars)
+2. **System learns** your preferences from your ratings
+3. **Get recommendations** based on what you love
+4. **Discover** new content across movies, music, and books
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Your taste profile is built from your ratings—higher ratings influence recommendations more. The system uses semantic embeddings to understand what you love, then finds similar content across different domains.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack
 
-## Deploy on Vercel
+- **Backend**: FastAPI, PostgreSQL + pgvector, Sentence Transformers
+- **Frontend**: Next.js, TypeScript, Tailwind CSS
+- **Matching**: 384D semantic embeddings for accurate recommendations
+- **Visualization**: 8D taste vectors for interpretable profiles
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Main endpoints:
+- `POST /api/users` - Create account
+- `POST /api/users/{id}/ratings` - Rate an item (1-5)
+- `GET /api/users/{id}/recommendations` - Get personalized recommendations
+- `GET /api/users/{id}/taste-profile` - See your taste profile
+- `POST /api/recommend` - Get recommendations from text input
+
+See `PLAN.md` for detailed documentation.
+
+## Project Structure
+
+```
+spectra/
+├── backend/          # FastAPI server
+├── frontend/        # Next.js app
+├── docker-compose.yml
+└── PLAN.md          # Detailed build plan
+```
+
+## License
+
+Open source
