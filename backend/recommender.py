@@ -152,6 +152,142 @@ class SpectraRecommender:
         
         return results
     
+    def compute_user_taste_profile(self, user_id: str) -> Optional[Dict]:
+        """
+        Compute user's taste profile from their ratings.
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            Dict with embedding_384d, taste_vector_8d, breakdown, and num_ratings
+            Returns None if user has no ratings
+        """
+        ratings = self.db.user.get_user_ratings_with_embeddings(user_id)
+        
+        if not ratings:
+            return None
+        
+        # Convert embeddings to numpy arrays and weight by rating
+        weights = np.array([r['rating'] for r in ratings])
+        embeddings_384d = []
+        taste_vectors_8d = []
+        
+        for r in ratings:
+            # Handle different embedding formats (list, numpy array, pgvector type)
+            embedding = r['embedding']
+            if isinstance(embedding, (list, tuple)):
+                embedding = np.array(embedding)
+            elif hasattr(embedding, 'tolist'):
+                embedding = np.array(embedding.tolist())
+            
+            taste_vector = r['taste_vector']
+            if isinstance(taste_vector, (list, tuple)):
+                taste_vector = np.array(taste_vector)
+            elif hasattr(taste_vector, 'tolist'):
+                taste_vector = np.array(taste_vector.tolist())
+            
+            embeddings_384d.append(embedding)
+            taste_vectors_8d.append(taste_vector)
+        
+        embeddings_384d = np.array(embeddings_384d)
+        taste_vectors_8d = np.array(taste_vectors_8d)
+        
+        # Weighted average (higher ratings = more influence)
+        weighted_embedding = np.average(embeddings_384d, axis=0, weights=weights)
+        weighted_taste_vector = np.average(taste_vectors_8d, axis=0, weights=weights)
+        
+        # Breakdown by dimension
+        breakdown = []
+        for i, (name, score) in enumerate(zip(self.dimension_names, weighted_taste_vector)):
+            dimension = TASTE_DIMENSIONS[i]
+            
+            if score > 0.1:
+                tendency = dimension['positive_label']
+            elif score < -0.1:
+                tendency = dimension['negative_label']
+            else:
+                tendency = "Balanced"
+            
+            breakdown.append({
+                'dimension': name,
+                'score': float(score),
+                'tendency': tendency,
+                'description': dimension['description']
+            })
+        
+        return {
+            'embedding_384d': weighted_embedding,
+            'taste_vector_8d': weighted_taste_vector,
+            'breakdown': breakdown,
+            'num_ratings': len(ratings)
+        }
+    
+    def recommend_for_user(
+        self,
+        user_id: str,
+        media_types: Optional[List[str]] = None,
+        top_k: int = 10,
+        exclude_rated: bool = True
+    ) -> Dict[str, List[Dict]]:
+        """
+        Get recommendations for a user based on their ratings.
+        
+        Args:
+            user_id: User ID
+            media_types: List of media types to search (None = all)
+            top_k: Number of recommendations per media type
+            exclude_rated: Whether to exclude items the user has already rated
+            
+        Returns:
+            Dict mapping media types to lists of recommendations
+        """
+        # Compute user's taste profile
+        profile = self.compute_user_taste_profile(user_id)
+        if not profile:
+            return {}
+        
+        # Get items user has already rated (to exclude)
+        rated_item_ids = set()
+        if exclude_rated:
+            rated_item_ids = set(self.db.user.get_rated_item_ids(user_id))
+        
+        # Use 384D embedding for matching (more accurate)
+        results = {}
+        if media_types is None:
+            media_types = ['movie', 'music', 'book']
+        
+        for media_type in media_types:
+            # Search using 384D embeddings
+            items = self.db.media.search_by_embedding(
+                embedding=profile['embedding_384d'],
+                media_type=media_type,
+                limit=top_k * 3  # Get extra to filter out rated items
+            )
+            
+            # Filter out rated items
+            filtered = [item for item in items if item['id'] not in rated_item_ids]
+            
+            # Limit to top_k
+            items = filtered[:top_k]
+            
+            # Format results
+            formatted = []
+            for item in items:
+                formatted.append({
+                    'id': item['id'],
+                    'title': item['title'],
+                    'media_type': item['media_type'],
+                    'year': item['year'],
+                    'description': item['description'][:200] + '...' if len(item.get('description', '')) > 200 else item.get('description', ''),
+                    'metadata': item.get('metadata', {}),
+                    'similarity': item['similarity']
+                })
+            
+            results[media_type] = formatted
+        
+        return results
+    
     def explain_match(
         self,
         item_id: str,
