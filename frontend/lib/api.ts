@@ -400,3 +400,63 @@ export async function getUserRecommendations(
   return response.json();
 }
 
+/**
+ * Onboarding interfaces
+ */
+export interface OnboardingMediaItem {
+  id: string;
+  title: string;
+  media_type: string;
+  year?: number;
+  description?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface OnboardingItemsResponse {
+  movies: OnboardingMediaItem[];
+  books: OnboardingMediaItem[];
+  music: OnboardingMediaItem[];
+}
+
+export interface SubmitPreferencesResponse {
+  success: boolean;
+  message: string;
+  items_added: number;
+}
+
+/**
+ * Get items for onboarding selection
+ */
+export async function getOnboardingItems(): Promise<OnboardingItemsResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/onboarding/items`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to get onboarding items: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Submit initial preferences during onboarding
+ */
+export async function submitInitialPreferences(
+  userId: string,
+  itemIds: string[]
+): Promise<SubmitPreferencesResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/onboarding/${userId}/preferences`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ item_ids: itemIds }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(error.detail || `Failed to submit preferences: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+

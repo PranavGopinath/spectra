@@ -14,7 +14,7 @@ from recommender import SpectraRecommender
 from dependencies import set_recommender
 
 # Import API routers
-from api import users, ratings, recommendations, taste, items, general, auth
+from api import users, ratings, recommendations, taste, items, general, auth, onboarding
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +55,7 @@ app.include_router(recommendations.router, prefix="/api", tags=["Chat"])  # For 
 app.include_router(items.router, prefix="/api/item", tags=["Items"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(ratings.router, prefix="/api/users/{user_id}/ratings", tags=["Ratings"])
+app.include_router(onboarding.router, prefix="/api/onboarding", tags=["Onboarding"])
 
 # Startup/Shutdown Events
 @app.on_event("startup")

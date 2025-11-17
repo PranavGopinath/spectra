@@ -5,13 +5,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { setCurrentUser, setAccessToken } from '@/lib/auth';
-import { getUser } from '@/lib/api';
+import { getUser, getUserRatings } from '@/lib/api';
 import { BackgroundVisuals } from '@/components/background-visuals';
+import OnboardingFlow from '@/components/OnboardingFlow';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -32,9 +35,22 @@ export default function AuthCallbackPage() {
 
       // Fetch user details
       getUser(userId)
-        .then((user) => {
-          setCurrentUser(user);
-          router.push('/');
+        .then(async (userData) => {
+          setCurrentUser(userData);
+          setUser(userData);
+          
+          // Check if user needs onboarding (no ratings)
+          try {
+            const ratings = await getUserRatings(userId);
+            if (ratings.ratings.length === 0) {
+              setShowOnboarding(true);
+            } else {
+              router.push('/');
+            }
+          } catch {
+            // If we can't check ratings, assume they need onboarding
+            setShowOnboarding(true);
+          }
         })
         .catch((err) => {
           setError(err.message || 'Failed to complete authentication');
@@ -49,6 +65,21 @@ export default function AuthCallbackPage() {
       }, 3000);
     }
   }, [searchParams, router]);
+
+  // Show onboarding if needed
+  if (showOnboarding && user) {
+    return (
+      <OnboardingFlow
+        userId={user.id}
+        onComplete={() => {
+          router.push('/');
+        }}
+        onSkip={() => {
+          router.push('/');
+        }}
+      />
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden">

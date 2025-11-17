@@ -6,6 +6,7 @@ import { Send, Sparkles, Film, Music, Book, User, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ChatMessage from './ChatMessage';
 import LoginModal from './LoginModal';
+import OnboardingFlow from './OnboardingFlow';
 import { BackgroundVisuals } from './background-visuals';
 import { 
   analyzeTaste, 
@@ -32,6 +33,7 @@ export default function ChatInterface() {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [userRatings, setUserRatings] = useState<Map<string, any>>(new Map());
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -47,11 +49,14 @@ export default function ChatInterface() {
 
   // Check authentication on mount - must happen before any rendering
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const currentUser = getCurrentUser();
       if (currentUser) {
         setUser(currentUser);
-        loadUserRatings(currentUser.id);
+        const needsOnboarding = await loadUserRatings(currentUser.id);
+        if (needsOnboarding) {
+          setShowOnboarding(true);
+        }
       } else {
         // Show login modal immediately if not authenticated
         setShowLoginModal(true);
@@ -76,8 +81,11 @@ export default function ChatInterface() {
         });
       });
       setUserRatings(ratingsMap);
+      // Check if user needs onboarding (no ratings yet)
+      return data.ratings.length === 0;
     } catch (error) {
       console.error('Failed to load user ratings:', error);
+      return false;
     }
   };
 
@@ -178,6 +186,22 @@ export default function ChatInterface() {
     }
   };
 
+  // Show onboarding if needed
+  if (showOnboarding && user) {
+    return (
+      <OnboardingFlow
+        userId={user.id}
+        onComplete={async () => {
+          setShowOnboarding(false);
+          await loadUserRatings(user.id);
+        }}
+        onSkip={() => {
+          setShowOnboarding(false);
+        }}
+      />
+    );
+  }
+
   // Show loading state while checking auth - this blocks rendering until auth check completes
   if (isCheckingAuth) {
     return (
@@ -216,10 +240,19 @@ export default function ChatInterface() {
           isOpen={showLoginModal}
           onClose={() => {}}
           canClose={false}
-          onLogin={(newUser) => {
+          onLogin={async (newUser) => {
             setUser(newUser);
-            loadUserRatings(newUser.id);
+            const needsOnboarding = await loadUserRatings(newUser.id);
             setShowLoginModal(false);
+            if (needsOnboarding) {
+              setShowOnboarding(true);
+            }
+          }}
+          onRegistrationSuccess={async (newUser) => {
+            setUser(newUser);
+            await loadUserRatings(newUser.id);
+            setShowLoginModal(false);
+            setShowOnboarding(true);
           }}
         />
       </div>

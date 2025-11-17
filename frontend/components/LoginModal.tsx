@@ -13,9 +13,10 @@ interface LoginModalProps {
   onClose: () => void;
   onLogin: (user: UserResponse) => void;
   canClose?: boolean;
+  onRegistrationSuccess?: (user: UserResponse) => void;
 }
 
-export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose, onLogin, canClose = true, onRegistrationSuccess }: LoginModalProps) {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,8 +44,15 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
 
       setAccessToken(result.access_token);
       setCurrentUser(result.user);
-      onLogin(result.user);
-      onClose();
+      
+      // If this is a registration (not login), trigger onboarding callback
+      if (!isLoginMode && onRegistrationSuccess) {
+        onRegistrationSuccess(result.user);
+      } else {
+        onLogin(result.user);
+        onClose();
+      }
+      
       setEmail('');
       setPassword('');
       setUsername('');
