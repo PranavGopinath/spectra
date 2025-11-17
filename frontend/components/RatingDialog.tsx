@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Star, Heart, Bookmark, Send } from 'lucide-react';
 import { addRating, RatingRequest, RecommendationItem } from '@/lib/api';
 import { getCurrentUser } from '@/lib/auth';
+import { Card } from '@/components/ui/card';
 
 interface RatingDialogProps {
   isOpen: boolean;
@@ -86,21 +87,21 @@ export default function RatingDialog({
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="glass backdrop-blur-xl rounded-3xl border border-white/20 p-8 max-w-lg w-full relative max-h-[90vh] overflow-y-auto">
+            <Card className="bg-card/90 backdrop-blur-md border-border p-8 max-w-lg w-full relative max-h-[90vh] overflow-y-auto shadow-2xl">
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <h2 className="text-2xl font-bold gradient-text mb-2">{item.title}</h2>
-              <p className="text-white/60 text-sm mb-6">{item.media_type} {item.year && `• ${item.year}`}</p>
+              <h2 className="text-2xl font-bold text-foreground mb-2">{item.title}</h2>
+              <p className="text-muted-foreground text-sm mb-6">{item.media_type} {item.year && `• ${item.year}`}</p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Rating Stars */}
                 <div>
-                  <label className="block text-sm font-medium text-white/80 mb-3">
+                  <label className="block text-sm font-medium text-foreground mb-3">
                     Your Rating
                   </label>
                   <div className="flex items-center gap-2">
@@ -114,27 +115,27 @@ export default function RatingDialog({
                         <Star
                           className={`w-8 h-8 transition-all ${
                             value <= rating
-                              ? 'text-yellow-400 fill-yellow-400'
-                              : 'text-white/20 hover:text-yellow-400/50'
+                              ? 'text-secondary fill-secondary'
+                              : 'text-muted-foreground/30 hover:text-secondary/50'
                           }`}
                         />
                       </button>
                     ))}
                     {rating > 0 && (
-                      <span className="ml-2 text-white/60 text-sm">{rating}/5</span>
+                      <span className="ml-2 text-muted-foreground text-sm">{rating}/5</span>
                     )}
                   </div>
                 </div>
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-white/80 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Notes (optional)
                   </label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all resize-none"
+                    className="w-full px-4 py-3 rounded-xl bg-background/50 backdrop-blur-sm border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
                     placeholder="What did you think?"
                     rows={3}
                     disabled={isLoading}
@@ -148,11 +149,11 @@ export default function RatingDialog({
                     onClick={() => setFavorite(!favorite)}
                     className={`flex-1 px-4 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${
                       favorite
-                        ? 'bg-red-500/20 border-red-500/50 text-red-300'
-                        : 'border-white/20 text-white/60 hover:border-white/40'
+                        ? 'bg-destructive/20 border-destructive/50 text-destructive'
+                        : 'border-border bg-background/50 hover:bg-background/70 text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <Heart className={`w-5 h-5 ${favorite ? 'fill-red-400' : ''}`} />
+                    <Heart className={`w-5 h-5 ${favorite ? 'fill-destructive' : ''}`} />
                     Favorite
                   </button>
                   <button
@@ -160,11 +161,11 @@ export default function RatingDialog({
                     onClick={() => setWantToConsume(!wantToConsume)}
                     className={`flex-1 px-4 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${
                       wantToConsume
-                        ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
-                        : 'border-white/20 text-white/60 hover:border-white/40'
+                        ? 'bg-primary/20 border-primary/50 text-primary'
+                        : 'border-border bg-background/50 hover:bg-background/70 text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <Bookmark className={`w-5 h-5 ${wantToConsume ? 'fill-blue-400' : ''}`} />
+                    <Bookmark className={`w-5 h-5 ${wantToConsume ? 'fill-primary' : ''}`} />
                     Watchlist
                   </button>
                 </div>
@@ -173,7 +174,7 @@ export default function RatingDialog({
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-3 rounded-xl bg-red-500/20 border border-red-500/50 text-red-300 text-sm"
+                    className="p-3 rounded-xl bg-destructive/20 border border-destructive/50 text-destructive text-sm"
                   >
                     {error}
                   </motion.div>
@@ -184,17 +185,16 @@ export default function RatingDialog({
                   disabled={isLoading || rating === 0}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/50 flex items-center justify-center gap-2"
+                  className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/50 flex items-center justify-center gap-2"
                 >
                   <Send className="w-5 h-5" />
                   {isLoading ? 'Saving...' : existingRating ? 'Update Rating' : 'Save Rating'}
                 </motion.button>
               </form>
-            </div>
+            </Card>
           </motion.div>
         </>
       )}
     </AnimatePresence>
   );
 }
-

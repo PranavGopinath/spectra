@@ -6,6 +6,7 @@ import { X, Mail, User as UserIcon, Lock, Github } from 'lucide-react';
 import { register, login, initiateOAuth } from '@/lib/api';
 import { setCurrentUser, setAccessToken } from '@/lib/auth';
 import { UserResponse } from '@/lib/api';
+import { Card } from '@/components/ui/card';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -79,20 +80,20 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="glass backdrop-blur-xl rounded-3xl border border-white/20 p-8 max-w-md w-full relative">
+            <Card className="bg-card/90 backdrop-blur-md border-border p-8 max-w-md w-full relative shadow-2xl">
               {canClose && (
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
+                  className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               )}
 
-              <h2 className="text-3xl font-bold gradient-text mb-2">
+              <h2 className="text-3xl font-bold text-foreground mb-2">
                 {isLoginMode ? 'Welcome Back' : 'Welcome to Spectra'}
               </h2>
-              <p className="text-white/60 mb-6">
+              <p className="text-muted-foreground mb-6">
                 {isLoginMode 
                   ? 'Sign in to continue to your personalized recommendations'
                   : 'Create an account to save your ratings and get personalized recommendations'
@@ -105,7 +106,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleOAuth('google')}
-                  className="w-full px-4 py-3 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-3 text-white"
+                  className="w-full px-4 py-3 rounded-xl bg-background/50 backdrop-blur-sm border border-border hover:bg-background/70 transition-all flex items-center justify-center gap-3 text-foreground"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path
@@ -132,7 +133,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleOAuth('github')}
-                  className="w-full px-4 py-3 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-3 text-white"
+                  className="w-full px-4 py-3 rounded-xl bg-background/50 backdrop-blur-sm border border-border hover:bg-background/70 transition-all flex items-center justify-center gap-3 text-foreground"
                 >
                   <Github className="w-5 h-5" />
                   <span className="font-medium">Continue with GitHub</span>
@@ -141,16 +142,16 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
 
               <div className="relative mb-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/20"></div>
+                  <div className="w-full border-t border-border"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-slate-950 text-white/60">or</span>
+                  <span className="px-2 bg-card text-muted-foreground">or</span>
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-white/80 mb-2 flex items-center gap-2">
+                  <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
                     <Mail className="w-4 h-4" />
                     Email
                   </label>
@@ -159,7 +160,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                    className="w-full px-4 py-3 rounded-xl bg-background/50 backdrop-blur-sm border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     placeholder="your@email.com"
                     disabled={isLoading}
                   />
@@ -167,7 +168,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
 
                 {!isLoginMode && (
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2 flex items-center gap-2">
+                    <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
                       <UserIcon className="w-4 h-4" />
                       Username (optional)
                     </label>
@@ -175,7 +176,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                      className="w-full px-4 py-3 rounded-xl bg-background/50 backdrop-blur-sm border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                       placeholder="Choose a username"
                       disabled={isLoading}
                     />
@@ -183,7 +184,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-white/80 mb-2 flex items-center gap-2">
+                  <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-2">
                     <Lock className="w-4 h-4" />
                     Password
                   </label>
@@ -193,7 +194,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={isLoginMode ? undefined : 8}
-                    className="w-full px-4 py-3 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                    className="w-full px-4 py-3 rounded-xl bg-background/50 backdrop-blur-sm border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     placeholder={isLoginMode ? "Enter your password" : "At least 8 characters"}
                     disabled={isLoading}
                   />
@@ -203,7 +204,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-3 rounded-xl bg-red-500/20 border border-red-500/50 text-red-300 text-sm"
+                    className="p-3 rounded-xl bg-destructive/20 border border-destructive/50 text-destructive text-sm"
                   >
                     {error}
                   </motion.div>
@@ -214,7 +215,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
                   disabled={isLoading || !email || !password}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/50"
+                  className="w-full px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/50"
                 >
                   {isLoading 
                     ? (isLoginMode ? 'Signing in...' : 'Creating account...')
@@ -230,7 +231,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
                     setIsLoginMode(!isLoginMode);
                     setError(null);
                   }}
-                  className="text-sm text-white/60 hover:text-white transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {isLoginMode 
                     ? "Don't have an account? Sign up"
@@ -238,7 +239,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true }
                   }
                 </button>
               </div>
-            </div>
+            </Card>
           </motion.div>
         </>
       )}

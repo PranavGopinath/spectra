@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 import { setCurrentUser, setAccessToken } from '@/lib/auth';
 import { getUser } from '@/lib/api';
+import { BackgroundVisuals } from '@/components/background-visuals';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -48,22 +51,32 @@ export default function AuthCallbackPage() {
   }, [searchParams, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 flex items-center justify-center">
-      <div className="text-center">
-        {error ? (
-          <>
-            <div className="text-red-400 text-xl mb-4">Authentication Error</div>
-            <div className="text-white/60">{error}</div>
-            <div className="text-white/40 text-sm mt-4">Redirecting to home...</div>
-          </>
-        ) : (
-          <>
-            <div className="text-white/60 mb-4">Completing authentication...</div>
-            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          </>
-        )}
+    <div className="relative min-h-screen overflow-hidden">
+      <BackgroundVisuals />
+      <div className="relative z-10 flex items-center justify-center h-screen">
+        <div className="text-center">
+          {error ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="text-destructive text-xl mb-4">Authentication Error</div>
+              <div className="text-muted-foreground">{error}</div>
+              <div className="text-muted-foreground/60 text-sm mt-4">Redirecting to home...</div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center"
+            >
+              <Sparkles className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
+              <h1 className="text-3xl font-bold text-foreground mb-2">Authenticating...</h1>
+              <p className="text-muted-foreground">Please wait while we log you in.</p>
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
-

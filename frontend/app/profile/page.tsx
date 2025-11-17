@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import UserProfile from '@/components/UserProfile';
+import { BackgroundVisuals } from '@/components/background-visuals';
 import { getCurrentUser, User } from '@/lib/auth';
 import { getDimensions, UserResponse } from '@/lib/api';
 
@@ -40,8 +41,11 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 flex items-center justify-center">
-        <div className="text-white/60">Loading...</div>
+      <div className="relative min-h-screen overflow-hidden">
+        <BackgroundVisuals />
+        <div className="relative z-10 flex items-center justify-center h-screen">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
       </div>
     );
   }
@@ -51,19 +55,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      </div>
-
+    <div className="relative min-h-screen overflow-hidden">
+      <BackgroundVisuals />
+      
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-8">
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => router.push('/')}
-          className="mb-6 px-4 py-2 rounded-xl border border-white/20 glass backdrop-blur-xl bg-white/5 hover:bg-white/10 transition-all flex items-center gap-2 text-white"
+          className="mb-6 px-4 py-2 rounded-xl bg-card/50 backdrop-blur-sm border border-border hover:bg-card/70 transition-all flex items-center gap-2 text-foreground"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Chat</span>
@@ -85,4 +85,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
