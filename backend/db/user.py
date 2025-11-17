@@ -118,6 +118,17 @@ class UserRepository:
             'oauth_provider': row[4]
         }
     
+    def link_oauth_to_user(self, user_id: str, oauth_provider: str, oauth_id: str) -> bool:
+        """Link an OAuth provider to an existing user account."""
+        query = """
+            UPDATE users 
+            SET oauth_provider = %s, oauth_id = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """
+        self.cursor.execute(query, (oauth_provider, oauth_id, user_id))
+        self.conn.commit()
+        return self.cursor.rowcount > 0
+    
     def add_rating(
         self,
         user_id: str,

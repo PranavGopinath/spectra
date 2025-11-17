@@ -148,7 +148,8 @@ async def oauth_authorize(
         raise HTTPException(status_code=500, detail="GitHub OAuth not configured")
     
     # OAuth callback goes to backend, which then redirects to frontend
-    redirect_uri = f"{os.getenv('BACKEND_URL', 'http://localhost:8000')}/api/auth/oauth/{provider}/callback"
+    backend_url = os.getenv('BACKEND_URL', 'http://localhost:8000').strip()
+    redirect_uri = f"{backend_url}/api/auth/oauth/{provider}/callback"
     return await oauth.__getattr__(provider).authorize_redirect(request, redirect_uri)
 
 
@@ -200,21 +201,24 @@ async def oauth_callback(
             # Check if email already exists (might be password account)
             existing_user = recommender.db.user.get_user_by_email(email)
             if existing_user:
-                # Link OAuth to existing account
-                # For now, we'll create a new account - in production, you might want to merge accounts
-                raise HTTPException(
-                    status_code=400, 
-                    detail="An account with this email already exists. Please log in with your password first, then link OAuth."
+                # Automatically link OAuth to existing account
+                # This allows users to sign in with either password or OAuth
+                recommender.db.user.link_oauth_to_user(
+                    existing_user['id'],
+                    provider,
+                    oauth_id
                 )
-            
-            # Create new user
-            user = recommender.db.user.create_user(
-                email=email,
-                username=username,
-                password_hash=None,
-                oauth_provider=provider,
-                oauth_id=oauth_id
-            )
+                # Get the updated user
+                user = recommender.db.user.get_user_by_id(existing_user['id'])
+            else:
+                # Create new user
+                user = recommender.db.user.create_user(
+                    email=email,
+                    username=username,
+                    password_hash=None,
+                    oauth_provider=provider,
+                    oauth_id=oauth_id
+                )
         
         # Create access token
         access_token = create_access_token(data={"sub": user['id'], "email": user['email']})
