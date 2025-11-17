@@ -75,6 +75,43 @@ class MediaRepository:
         
         return results
     
+    def search_by_embedding(
+        self,
+        embedding: np.ndarray,
+        media_type: Optional[str] = None,
+        limit: int = 10
+    ) -> List[Dict]:
+        """Find similar items by semantic embedding (384D) using cosine distance."""
+        embedding_list = embedding.tolist() if isinstance(embedding, np.ndarray) else embedding
+        
+        query = """
+            SELECT 
+                id, title, media_type, year, description, metadata,
+                1 - (embedding <=> %s::vector) / 2 AS similarity
+            FROM media_items
+            WHERE (%s IS NULL OR media_type = %s)
+            ORDER BY embedding <=> %s::vector
+            LIMIT %s
+        """
+        
+        self.cursor.execute(query, (embedding_list, media_type, media_type, embedding_list, limit))
+        rows = self.cursor.fetchall()
+        
+        # Convert rows to dictionaries
+        results = []
+        for row in rows:
+            results.append({
+                'id': row[0],
+                'title': row[1],
+                'media_type': row[2],
+                'year': row[3],
+                'description': row[4],
+                'metadata': row[5],
+                'similarity': float(row[6])
+            })
+        
+        return results
+    
     def get_item_by_id(self, item_id: str) -> Optional[Dict]:
         """Get a specific item by ID."""
         query = """

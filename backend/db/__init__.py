@@ -2,6 +2,7 @@
 
 from db.base import DatabaseConnection
 from db.media import MediaRepository
+from db.user import UserRepository
 import os
 
 
@@ -11,9 +12,7 @@ class Database:
     def __init__(self, connection_string: str = None):
         self.connection = DatabaseConnection(connection_string)
         self.media = MediaRepository(self.connection)
-        
-        # Future: self.users = UserRepository(self.connection)
-        # Future: self.profiles = ProfileRepository(self.connection)
+        self.user = UserRepository(self.connection)
     
     def create_tables(self, schema_path: str = None):
         """Create database tables from schema.sql."""
@@ -34,5 +33,5 @@ class Database:
         self.connection.__exit__(exc_type, exc_val, exc_tb)
 
 
-__all__ = ['Database', 'DatabaseConnection', 'MediaRepository']
+__all__ = ['Database', 'DatabaseConnection', 'MediaRepository', 'UserRepository']
 
