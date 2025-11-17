@@ -5,6 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from recommender import SpectraRecommender
 from taste_dimensions import TASTE_DIMENSIONS
@@ -128,7 +132,11 @@ async def startup_event():
     try:
         logger.info("Loading LLM for response generation...")
         response_generator = ResponseGenerator()
-        logger.info("✓ LLM loaded successfully")
+        if response_generator.is_loaded:
+            logger.info("✓ LLM loaded successfully")
+        else:
+            logger.warning("LLM failed to load (will use fallback responses)")
+            response_generator = None
     except Exception as e:
         logger.warning(f"Failed to load LLM (will use fallback responses): {e}")
         response_generator = None
@@ -308,26 +316,53 @@ async def get_stats():
 
 @app.post("/api/generate-response", tags=["Chat"])
 async def generate_response(request: GenerateResponseRequest):
-    """Generate a contextual chat response using LLM."""
-    if not response_generator:
+    """Generate a brief intro for recommendations using LLM."""
+    if not response_generator or not response_generator.is_loaded:
         # Fallback to simple response if LLM not available
+        logger.warning("LLM not available, using fallback")
         return {
-            "response": "I've analyzed your taste preferences! Here's your taste profile:"
+            "response": "Here are some recommendations based on your preferences:",
+            "llm_used": False
         }
     
     try:
-        response = response_generator.generate_response(
+        intro = response_generator.generate_intro(
             user_input=request.user_input,
-            taste_analysis=request.taste_analysis,
+            recommendations=None,  # Can pass recommendations if needed
             conversation_history=request.conversation_history
         )
-        return {"response": response}
-    except Exception as e:
-        logger.error(f"Error generating response: {e}")
-        # Fallback response on error
         return {
-            "response": "I've analyzed your taste preferences! Here's your taste profile:"
+            "response": intro,
+            "llm_used": True
         }
+    except Exception as e:
+        logger.error(f"Error generating response: {e}", exc_info=True)
+        import os
+        return {
+            "response": "Here are some recommendations based on your preferences:",
+            "llm_used": False,
+            "error": str(e) if os.getenv("DEBUG") else None
+        }
+
+
+@app.get("/api/llm/status", tags=["Monitoring"])
+async def get_llm_status():
+    """Get LLM status for monitoring."""
+    if not response_generator:
+        return {
+            "status": "not_loaded",
+            "available": False
+        }
+    
+    status = response_generator.get_status()
+    return {
+        "status": "loaded" if status["loaded"] else "not_loaded",
+        "available": status["loaded"],
+        "model": status["model"],
+        "device": status["device"],
+        "gpu_available": status["gpu_available"],
+        "load_time": status["load_time"]
+    }
 
 
 # Run with: uvicorn main:app --reload --host 0.0.0.0 --port 8000
