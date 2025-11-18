@@ -63,7 +63,7 @@ export default function ProfileView({ userId }: ProfileViewProps) {
   const stats = {
     totalRatings: ratings.length,
     favorites: ratings.filter(r => r.favorite).length,
-    watchlist: ratings.filter(r => r.want_to_consume).length,
+    myList: ratings.filter(r => r.want_to_consume).length,
     movies: ratings.filter(r => r.item.media_type === 'movie').length,
     books: ratings.filter(r => r.item.media_type === 'book').length,
     music: ratings.filter(r => r.item.media_type === 'music').length,
@@ -136,9 +136,9 @@ export default function ProfileView({ userId }: ProfileViewProps) {
             >
               <div className="flex items-center gap-2 mb-2">
                 <Bookmark className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground">Watchlist</span>
+                <span className="text-sm text-muted-foreground">My List</span>
               </div>
-              <p className="text-2xl font-bold text-foreground">{stats.watchlist}</p>
+              <p className="text-2xl font-bold text-foreground">{stats.myList}</p>
             </motion.div>
 
             <motion.div

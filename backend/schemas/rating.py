@@ -9,7 +9,7 @@ class RatingRequest(BaseModel):
     rating: int = Field(..., ge=1, le=5, description="Rating from 1-5")
     notes: Optional[str] = Field(default=None, description="Optional notes/comments")
     favorite: Optional[bool] = Field(default=None, description="Mark as favorite")
-    want_to_consume: Optional[bool] = Field(default=None, description="Add to watchlist/reading list")
+    want_to_consume: Optional[bool] = Field(default=None, description="Add to My List")
 
 
 class RatingResponse(BaseModel):

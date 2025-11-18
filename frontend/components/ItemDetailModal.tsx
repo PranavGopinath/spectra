@@ -113,7 +113,7 @@ export default function ItemDetailModal({
     }
   };
 
-  const handleToggleWatchlist = async () => {
+  const handleToggleMyList = async () => {
     if (!user || !item) return;
     
     const newWantToConsume = !wantToConsume;
@@ -132,7 +132,7 @@ export default function ItemDetailModal({
       setWantToConsume(newWantToConsume);
       onRatingUpdated?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update watchlist');
+      setError(err instanceof Error ? err.message : 'Failed to update My List');
     } finally {
       setIsUpdating(false);
     }
@@ -262,12 +262,12 @@ export default function ItemDetailModal({
                         </div>
                       )}
 
-                      {/* Watchlist and Favorite Actions */}
+                      {/* My List and Favorite Actions */}
                       {user && (
                         <div className="pt-4 border-t border-border">
                           <div className="flex gap-3 mb-4">
                             <button
-                              onClick={handleToggleWatchlist}
+                              onClick={handleToggleMyList}
                               disabled={isUpdating}
                               className={`flex-1 px-4 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${
                                 wantToConsume
@@ -276,7 +276,7 @@ export default function ItemDetailModal({
                               } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                               <Bookmark className={`w-5 h-5 ${wantToConsume ? 'fill-primary' : ''}`} />
-                              {wantToConsume ? 'In Watchlist' : 'Add to Watchlist'}
+                              {wantToConsume ? 'In My List' : 'Add to My List'}
                             </button>
                             <button
                               onClick={handleToggleFavorite}

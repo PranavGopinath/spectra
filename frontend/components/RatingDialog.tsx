@@ -52,7 +52,7 @@ export default function RatingDialog({
         item_id: item.id,
         rating,
         notes: notes || undefined,
-        // Preserve existing favorite and watchlist status if they exist
+        // Preserve existing favorite and My List status if they exist
         favorite: existingRating?.favorite,
         want_to_consume: existingRating?.want_to_consume,
       };

@@ -272,8 +272,8 @@ class UserRepository:
             for row in rows
         ]
     
-    def get_watchlist(self, user_id: str) -> List[Dict]:
-        """Get all items in user's watchlist/reading list."""
+    def get_my_list(self, user_id: str) -> List[Dict]:
+        """Get all items in user's My List."""
         query = """
             SELECT 
                 ur.id, ur.item_id, ur.rating, ur.notes, ur.created_at, ur.updated_at,

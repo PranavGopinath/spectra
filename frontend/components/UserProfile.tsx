@@ -19,7 +19,7 @@ interface UserProfileProps {
 export default function UserProfile({ user, dimensionNames, onRatingDeleted }: UserProfileProps) {
   const [ratings, setRatings] = useState<UserRatingWithItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'all' | 'favorites' | 'watchlist'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'favorites' | 'myList'>('all');
   const [tasteProfile, setTasteProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -65,12 +65,12 @@ export default function UserProfile({ user, dimensionNames, onRatingDeleted }: U
 
   const filteredRatings = ratings.filter(rating => {
     if (activeTab === 'favorites') return rating.favorite === true;
-    if (activeTab === 'watchlist') return rating.want_to_consume === true;
+    if (activeTab === 'myList') return rating.want_to_consume === true;
     return true;
   });
 
   const favoritesCount = ratings.filter(r => r.favorite).length;
-  const watchlistCount = ratings.filter(r => r.want_to_consume).length;
+  const myListCount = ratings.filter(r => r.want_to_consume).length;
 
   return (
     <div className="space-y-6">
@@ -148,15 +148,15 @@ export default function UserProfile({ user, dimensionNames, onRatingDeleted }: U
           Favorites ({favoritesCount})
         </button>
         <button
-          onClick={() => setActiveTab('watchlist')}
+          onClick={() => setActiveTab('myList')}
           className={`px-4 py-2 font-medium transition-colors flex items-center gap-2 ${
-            activeTab === 'watchlist'
+            activeTab === 'myList'
               ? 'text-foreground border-b-2 border-primary'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Bookmark className="w-4 h-4" />
-          Watchlist ({watchlistCount})
+          My List ({myListCount})
         </button>
       </div>
 
@@ -167,7 +167,7 @@ export default function UserProfile({ user, dimensionNames, onRatingDeleted }: U
         <div className="text-center py-12 text-muted-foreground">
           {activeTab === 'all' && 'No ratings yet. Start rating items to build your profile!'}
           {activeTab === 'favorites' && 'No favorites yet.'}
-          {activeTab === 'watchlist' && 'Your watchlist is empty.'}
+          {activeTab === 'myList' && 'Your list is empty.'}
         </div>
       ) : (
         <div className="grid gap-4">

@@ -307,7 +307,7 @@ function RatedItemIcon({ rating, offsetX, offsetY, containerSize, onItemClick }:
           </div>
         )}
 
-        {/* Watchlist indicator */}
+        {/* My List indicator */}
         {rating.want_to_consume && (
           <div className="absolute -top-1 -left-1">
             <Bookmark className={`${baseSize > 60 ? 'w-4 h-4' : 'w-3 h-3'} text-primary fill-primary`} />
