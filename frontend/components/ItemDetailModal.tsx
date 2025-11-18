@@ -62,30 +62,15 @@ export default function ItemDetailModal({
     setWantToConsume(existingRating?.want_to_consume || false);
   }, [existingRating]);
 
-  // Prevent background scroll when modal is open
+  // Prevent chat container scroll when modal is open (but allow page scroll)
   useEffect(() => {
     if (isOpen) {
-      // Save current scroll position
-      const currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
-      setScrollY(currentScrollY);
-      
-      // Prevent body scroll while keeping position
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      // Set data attribute to disable chat container scroll via CSS
       document.body.setAttribute('data-modal-open', 'true');
       
-      // Also prevent scroll on the html element
-      document.documentElement.style.overflow = 'hidden';
-      
       return () => {
-        // Re-enable body scroll
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
+        // Remove data attribute to re-enable chat container scroll
         document.body.removeAttribute('data-modal-open');
-        document.documentElement.style.overflow = '';
-        // Restore scroll position
-        window.scrollTo(0, currentScrollY);
       };
     }
   }, [isOpen]);
@@ -183,17 +168,7 @@ export default function ItemDetailModal({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed z-[70] flex items-start justify-center p-4"
-            style={{
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              maxHeight: '100vh',
-              overflowY: 'auto',
-              paddingTop: '2rem',
-              paddingBottom: '2rem'
-            }}
+            className="fixed inset-0 z-[70] flex items-center justify-center p-4 overflow-y-auto"
             onClick={(e) => {
               // Close modal if clicking anywhere outside the Card
               // The Card will stop propagation, so if we get here, it's outside the card
@@ -201,7 +176,7 @@ export default function ItemDetailModal({
             }}
           >
             <Card 
-              className="bg-card/95 backdrop-blur-md border-border p-8 max-w-3xl w-full relative shadow-2xl mt-8"
+              className="bg-card/95 backdrop-blur-md border-border p-8 max-w-3xl w-full relative shadow-2xl my-auto max-h-[90vh] overflow-y-auto"
               onClick={(e) => {
                 // Stop propagation so clicks inside card don't close modal
                 e.stopPropagation();
