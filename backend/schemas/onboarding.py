@@ -21,9 +21,15 @@ class OnboardingItemsResponse(BaseModel):
     music: List[MediaItem]
 
 
+class OnboardingRating(BaseModel):
+    """A single rating during onboarding."""
+    item_id: str = Field(..., description="Item ID")
+    rating: int = Field(..., ge=1, le=5, description="Rating from 1-5")
+
+
 class SubmitPreferencesRequest(BaseModel):
-    """Request to submit initial preferences."""
-    item_ids: List[str] = Field(..., min_length=1, description="List of item IDs the user likes")
+    """Request to submit initial preferences with ratings."""
+    ratings: List[OnboardingRating] = Field(..., min_length=1, description="List of item ratings")
 
 
 class SubmitPreferencesResponse(BaseModel):

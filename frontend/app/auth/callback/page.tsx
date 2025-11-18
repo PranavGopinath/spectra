@@ -66,15 +66,12 @@ export default function AuthCallbackPage() {
     }
   }, [searchParams, router]);
 
-  // Show onboarding if needed
+  // Show onboarding if needed (mandatory for new users)
   if (showOnboarding && user) {
     return (
       <OnboardingFlow
         userId={user.id}
         onComplete={() => {
-          router.push('/');
-        }}
-        onSkip={() => {
           router.push('/');
         }}
       />

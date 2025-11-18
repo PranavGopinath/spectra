@@ -491,6 +491,11 @@ export interface OnboardingItemsResponse {
   music: OnboardingMediaItem[];
 }
 
+export interface OnboardingRating {
+  item_id: string;
+  rating: number;
+}
+
 export interface SubmitPreferencesResponse {
   success: boolean;
   message: string;
@@ -515,14 +520,14 @@ export async function getOnboardingItems(): Promise<OnboardingItemsResponse> {
  */
 export async function submitInitialPreferences(
   userId: string,
-  itemIds: string[]
+  ratings: OnboardingRating[]
 ): Promise<SubmitPreferencesResponse> {
   const response = await fetch(`${API_BASE_URL}/api/onboarding/${userId}/preferences`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ item_ids: itemIds }),
+    body: JSON.stringify({ ratings }),
   });
 
   if (!response.ok) {

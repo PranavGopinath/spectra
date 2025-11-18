@@ -241,7 +241,7 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
   // Show onboarding if needed
   if (showOnboarding && user) {
     return (
-      <div className="h-full flex items-center justify-center">
+      <div className="h-full w-full overflow-y-auto">
         <OnboardingFlow
           userId={user.id}
           onComplete={async () => {

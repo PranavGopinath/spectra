@@ -14,7 +14,7 @@ router = APIRouter()
 @router.get("/items", response_model=OnboardingItemsResponse, tags=["Onboarding"])
 async def get_onboarding_items(
     recommender: SpectraRecommender = Depends(get_recommender),
-    limit_per_type: int = 30
+    limit_per_type: int = 100
 ):
     """Get a selection of items from movies, books, and music for onboarding."""
     try:
@@ -51,30 +51,50 @@ async def submit_initial_preferences(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Add ratings for each selected item
-        # Use rating 5 (highest) for items the user likes during onboarding
-        added_count = 0
-        for item_id in request.item_ids:
-            # Verify item exists
-            item = recommender.db.media.get_item_by_id(item_id)
+        # Validate that user has rated at least 1 item from each category
+        rated_items = {}
+        for rating in request.ratings:
+            item = recommender.db.media.get_item_by_id(rating.item_id)
             if not item:
-                logger.warning(f"Item {item_id} not found, skipping")
+                logger.warning(f"Item {rating.item_id} not found, skipping")
+                continue
+            media_type = item.get('media_type')
+            if media_type and media_type in ['movie', 'book', 'music']:
+                if media_type not in rated_items:
+                    rated_items[media_type] = []
+                rated_items[media_type].append(rating)
+        
+        # Check minimum requirements
+        if 'movie' not in rated_items or len(rated_items['movie']) == 0:
+            raise HTTPException(status_code=400, detail="Please rate at least 1 movie")
+        if 'book' not in rated_items or len(rated_items['book']) == 0:
+            raise HTTPException(status_code=400, detail="Please rate at least 1 book")
+        if 'music' not in rated_items or len(rated_items['music']) == 0:
+            raise HTTPException(status_code=400, detail="Please rate at least 1 music/artist")
+        
+        # Add ratings for each rated item
+        added_count = 0
+        for rating in request.ratings:
+            # Verify item exists
+            item = recommender.db.media.get_item_by_id(rating.item_id)
+            if not item:
+                logger.warning(f"Item {rating.item_id} not found, skipping")
                 continue
             
-            # Add rating with high score (5) since user selected it as a preference
+            # Add rating with user-provided rating value
             recommender.db.user.add_rating(
                 user_id=user_id,
-                item_id=item_id,
-                rating=5,  # High rating for onboarding preferences
+                item_id=rating.item_id,
+                rating=rating.rating,
                 notes=None,
-                favorite=True,  # Mark as favorite since user selected it
-                want_to_consume=False
+                favorite=None,  # Don't auto-mark as favorite, let user decide
+                want_to_consume=None
             )
             added_count += 1
         
         return {
             "success": True,
-            "message": f"Added {added_count} preferences",
+            "message": f"Added {added_count} ratings",
             "items_added": added_count
         }
     except HTTPException:
