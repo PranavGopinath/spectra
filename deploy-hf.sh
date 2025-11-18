@@ -43,8 +43,7 @@ rsync -av --delete \
     --exclude ".env" \
     "$SPECTRA_DIR/backend/" "$HF_SPACE_DIR/backend/"
 
-# Keep Dockerfile and requirements aligned for Hugging Face build
-cp "$SPECTRA_DIR/backend/Dockerfile" "$HF_SPACE_DIR/Dockerfile"
+# Keep requirements aligned for Hugging Face build (Dockerfile is HF-specific)
 cp "$SPECTRA_DIR/backend/requirements.txt" "$HF_SPACE_DIR/requirements.txt"
 
 # Remove .env if it exists (secrets are in HF Space settings)
