@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Film, Music, BookOpen } from 'lucide-react';
-import { getItem, OnboardingMediaItem } from '@/lib/api';
+import { X, Star, Film, Music, BookOpen, Heart, Bookmark } from 'lucide-react';
+import { getItem, OnboardingMediaItem, addRating } from '@/lib/api';
 import { getCurrentUser } from '@/lib/auth';
 import RatingDialog from './RatingDialog';
 import { Card } from '@/components/ui/card';
@@ -45,12 +45,50 @@ export default function ItemDetailModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [favorite, setFavorite] = useState(existingRating?.favorite || false);
+  const [wantToConsume, setWantToConsume] = useState(existingRating?.want_to_consume || false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
     if (isOpen && itemId) {
       loadItem();
     }
   }, [isOpen, itemId]);
+
+  useEffect(() => {
+    // Update local state when existingRating changes
+    setFavorite(existingRating?.favorite || false);
+    setWantToConsume(existingRating?.want_to_consume || false);
+  }, [existingRating]);
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position
+      const currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+      setScrollY(currentScrollY);
+      
+      // Prevent body scroll while keeping position
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.body.setAttribute('data-modal-open', 'true');
+      
+      // Also prevent scroll on the html element
+      document.documentElement.style.overflow = 'hidden';
+      
+      return () => {
+        // Re-enable body scroll
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        document.body.removeAttribute('data-modal-open');
+        document.documentElement.style.overflow = '';
+        // Restore scroll position
+        window.scrollTo(0, currentScrollY);
+      };
+    }
+  }, [isOpen]);
 
   const loadItem = async () => {
     setIsLoading(true);
@@ -62,6 +100,56 @@ export default function ItemDetailModal({
       setError(err instanceof Error ? err.message : 'Failed to load item');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!user || !item) return;
+    
+    const newFavorite = !favorite;
+    setIsUpdating(true);
+    setError(null);
+    
+    try {
+      // If there's an existing rating, update it; otherwise create a minimal rating
+      await addRating(user.id, {
+        item_id: item.id,
+        rating: existingRating?.rating || 1, // Use existing rating or default to 1
+        notes: existingRating?.notes,
+        favorite: newFavorite,
+        want_to_consume: wantToConsume,
+      });
+      setFavorite(newFavorite);
+      onRatingUpdated?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update favorite');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleToggleWatchlist = async () => {
+    if (!user || !item) return;
+    
+    const newWantToConsume = !wantToConsume;
+    setIsUpdating(true);
+    setError(null);
+    
+    try {
+      // If there's an existing rating, update it; otherwise create a minimal rating
+      await addRating(user.id, {
+        item_id: item.id,
+        rating: existingRating?.rating || 1, // Use existing rating or default to 1
+        notes: existingRating?.notes,
+        favorite: favorite,
+        want_to_consume: newWantToConsume,
+      });
+      setWantToConsume(newWantToConsume);
+      onRatingUpdated?.();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update watchlist');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -87,17 +175,38 @@ export default function ItemDetailModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            style={{ top: 0, left: 0, right: 0, bottom: 0 }}
           />
           
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed z-[70] flex items-start justify-center p-4"
+            style={{
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              maxHeight: '100vh',
+              overflowY: 'auto',
+              paddingTop: '2rem',
+              paddingBottom: '2rem'
+            }}
+            onClick={(e) => {
+              // Close modal if clicking anywhere outside the Card
+              // The Card will stop propagation, so if we get here, it's outside the card
+              onClose();
+            }}
           >
-            <Card className="bg-card/95 backdrop-blur-md border-border p-8 max-w-3xl w-full relative max-h-[90vh] overflow-y-auto shadow-2xl">
+            <Card 
+              className="bg-card/95 backdrop-blur-md border-border p-8 max-w-3xl w-full relative shadow-2xl mt-8"
+              onClick={(e) => {
+                // Stop propagation so clicks inside card don't close modal
+                e.stopPropagation();
+              }}
+            >
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="text-muted-foreground">Loading...</div>
@@ -178,9 +287,43 @@ export default function ItemDetailModal({
                         </div>
                       )}
 
-                      {/* User Rating Section */}
+                      {/* Watchlist and Favorite Actions */}
                       {user && (
                         <div className="pt-4 border-t border-border">
+                          <div className="flex gap-3 mb-4">
+                            <button
+                              onClick={handleToggleWatchlist}
+                              disabled={isUpdating}
+                              className={`flex-1 px-4 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${
+                                wantToConsume
+                                  ? 'bg-primary/20 border-primary/50 text-primary'
+                                  : 'border-border bg-background/50 hover:bg-background/70 text-muted-foreground hover:text-foreground'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                              <Bookmark className={`w-5 h-5 ${wantToConsume ? 'fill-primary' : ''}`} />
+                              {wantToConsume ? 'In Watchlist' : 'Add to Watchlist'}
+                            </button>
+                            <button
+                              onClick={handleToggleFavorite}
+                              disabled={isUpdating}
+                              className={`flex-1 px-4 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${
+                                favorite
+                                  ? 'bg-destructive/20 border-destructive/50 text-destructive'
+                                  : 'border-border bg-background/50 hover:bg-background/70 text-muted-foreground hover:text-foreground'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                              <Heart className={`w-5 h-5 ${favorite ? 'fill-destructive' : ''}`} />
+                              {favorite ? 'Favorited' : 'Favorite'}
+                            </button>
+                          </div>
+
+                          {error && (
+                            <div className="mb-4 p-3 rounded-xl bg-destructive/20 border border-destructive/50 text-destructive text-sm">
+                              {error}
+                            </div>
+                          )}
+
+                          {/* User Rating Section */}
                           {existingRating ? (
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">

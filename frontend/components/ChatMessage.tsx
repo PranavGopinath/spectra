@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, User } from 'lucide-react';
 import RecommendationCard from './RecommendationCard';
+import ItemDetailModal from './ItemDetailModal';
 import { RecommendationItem } from '@/lib/api';
 
 interface ChatMessageProps {
@@ -32,6 +34,7 @@ export default function ChatMessage({
   onRatingUpdated,
 }: ChatMessageProps) {
   const isUser = role === 'user';
+  const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -93,6 +96,7 @@ export default function ChatMessage({
                     key={item.id}
                     item={item} 
                     existingRating={userRatings?.get(item.id)}
+                    onItemClick={(itemId) => setSelectedItem(itemId)}
                     onRatingUpdated={onRatingUpdated}
                   />
                 ))}
@@ -111,6 +115,7 @@ export default function ChatMessage({
                     key={item.id}
                     item={item} 
                     existingRating={userRatings?.get(item.id)}
+                    onItemClick={(itemId) => setSelectedItem(itemId)}
                     onRatingUpdated={onRatingUpdated}
                   />
                 ))}
@@ -129,6 +134,7 @@ export default function ChatMessage({
                     key={item.id}
                     item={item} 
                     existingRating={userRatings?.get(item.id)}
+                    onItemClick={(itemId) => setSelectedItem(itemId)}
                     onRatingUpdated={onRatingUpdated}
                   />
                 ))}
@@ -136,6 +142,20 @@ export default function ChatMessage({
             </div>
           )}
         </div>
+      )}
+
+      {/* Item Detail Modal */}
+      {selectedItem && (
+        <ItemDetailModal
+          isOpen={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+          itemId={selectedItem}
+          existingRating={userRatings?.get(selectedItem)}
+          onRatingUpdated={() => {
+            onRatingUpdated?.();
+            setSelectedItem(null);
+          }}
+        />
       )}
     </div>
   );

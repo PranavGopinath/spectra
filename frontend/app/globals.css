@@ -117,3 +117,8 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* Prevent scrolling on chat messages container when modal is open */
+body[data-modal-open] [data-chat-messages] {
+  overflow: hidden !important;
+}

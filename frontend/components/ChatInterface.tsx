@@ -77,6 +77,62 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleGetPersonalizedRecommendations = async () => {
+    if (!user || isLoading) return;
+    
+    setIsLoading(true);
+    const userMessage = "Show me personalized recommendations";
+    
+    // Add user message
+    setMessages((prev) => [...prev, { role: 'user', content: 'For you' }]);
+
+    try {
+      // Generate contextual intro
+      let contextualResponse = "Here are some personalized recommendations based on your taste profile:";
+      
+      // Get user-specific recommendations based on their ratings
+      let recommendations: RecommendationsResponse;
+      try {
+        recommendations = await getUserRecommendations(user.id, { top_k: 5 });
+        
+        // Check if we got any recommendations
+        const hasRecommendations = 
+          (recommendations.movie && recommendations.movie.length > 0) ||
+          (recommendations.music && recommendations.music.length > 0) ||
+          (recommendations.book && recommendations.book.length > 0);
+        
+        if (!hasRecommendations) {
+          contextualResponse = "You don't have enough ratings yet. Rate some items to get personalized recommendations!";
+        }
+      } catch (error) {
+        console.error('Error getting personalized recommendations:', error);
+        contextualResponse = "You don't have enough ratings yet. Rate some items to get personalized recommendations!";
+        recommendations = { movie: [], music: [], book: [] };
+      }
+      
+      // Add assistant message with recommendations
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: contextualResponse,
+          recommendations,
+        },
+      ]);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -204,7 +260,7 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
     <div className="h-full flex flex-col p-4 md:p-6 max-w-5xl mx-auto w-full">
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto mb-4 space-y-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border">
+      <div className="flex-1 overflow-y-auto mb-4 space-y-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border" data-chat-messages>
         <AnimatePresence>
           {messages.map((message, index) => (
             <div
@@ -272,6 +328,15 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
         
         <div className="flex items-center justify-center gap-2 mt-3 text-xs text-muted-foreground">
           <span>Try:</span>
+          {user && (
+            <button 
+              onClick={handleGetPersonalizedRecommendations}
+              disabled={isLoading}
+              className="px-2 py-1 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary transition-colors disabled:opacity-50"
+            >
+              For you
+            </button>
+          )}
           <button 
             onClick={() => setInput('Recommend me sci-fi movies like Interstellar')}
             className="px-2 py-1 rounded-lg bg-muted/50 hover:bg-muted transition-colors"

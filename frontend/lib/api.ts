@@ -231,9 +231,19 @@ export async function generateResponse(
 export function detectMediaType(userInput: string): string[] | null {
   const input = userInput.toLowerCase();
   
-  const movieKeywords = ['movie', 'movies', 'film', 'films', 'cinema', 'cinematic', 'director', 'actor', 'actress', 'watch', 'watching'];
-  const musicKeywords = ['music', 'song', 'songs', 'album', 'albums', 'artist', 'band', 'musician', 'listen', 'listening', 'audio', 'track', 'tracks'];
-  const bookKeywords = ['book', 'books', 'novel', 'novels', 'author', 'read', 'reading', 'literature', 'chapter', 'chapters'];
+  const movieKeywords = ['movie', 'movies', 'film', 'films', 'cinema', 'cinematic', 'director', 'actor', 'actress', 'watch', 'watching', 'thriller', 'comedy', 'drama', 'horror', 'sci-fi', 'scifi', 'action', 'romance'];
+  const musicKeywords = [
+    // Generic music terms
+    'music', 'song', 'songs', 'album', 'albums', 'artist', 'band', 'musician', 'listen', 'listening', 'audio', 'track', 'tracks', 'playlist',
+    // Music genres
+    'rap', 'hip-hop', 'hiphop', 'hip hop', 'r&b', 'rnb', 'rock', 'pop', 'jazz', 'blues', 'country', 'folk', 'electronic', 'edm', 'techno', 'house', 'trance',
+    'metal', 'punk', 'reggae', 'soul', 'funk', 'disco', 'classical', 'opera', 'gospel', 'latin', 'salsa', 'samba', 'bossa nova',
+    'indie', 'alternative', 'grunge', 'hardcore', 'emo', 'ska', 'dubstep', 'drum and bass', 'drumandbass', 'ambient', 'lo-fi', 'lofi',
+    'trap', 'drill', 'mumble', 'gangsta', 'conscious', 'underground', 'mainstream', 'beat', 'rhythm', 'melody', 'harmony',
+    // Artist/band related
+    'singer', 'rapper', 'dj', 'producer', 'composer', 'vocalist', 'guitarist', 'drummer', 'bassist', 'pianist'
+  ];
+  const bookKeywords = ['book', 'books', 'novel', 'novels', 'author', 'read', 'reading', 'literature', 'chapter', 'chapters', 'fiction', 'non-fiction', 'nonfiction', 'biography', 'memoir', 'poetry', 'poem', 'essay', 'essays'];
   
   const detected: string[] = [];
   

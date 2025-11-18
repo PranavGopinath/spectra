@@ -123,7 +123,6 @@ export function ChatInterface() {
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-balance">Spectra</h1>
-              <p className="text-sm text-muted-foreground">Your Entertainment Curator</p>
             </div>
           </div>
           

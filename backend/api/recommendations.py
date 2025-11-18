@@ -83,9 +83,19 @@ def detect_media_type(user_input: str) -> Optional[List[str]]:
     user_input_lower = user_input.lower()
     
     # Media type keywords
-    movie_keywords = {'movie', 'movies', 'film', 'films', 'cinema', 'cinematic', 'director', 'actor', 'actress', 'watch', 'watching'}
-    music_keywords = {'music', 'song', 'songs', 'album', 'albums', 'artist', 'band', 'musician', 'listen', 'listening', 'audio', 'track', 'tracks'}
-    book_keywords = {'book', 'books', 'novel', 'novels', 'author', 'read', 'reading', 'literature', 'chapter', 'chapters'}
+    movie_keywords = {'movie', 'movies', 'film', 'films', 'cinema', 'cinematic', 'director', 'actor', 'actress', 'watch', 'watching', 'thriller', 'comedy', 'drama', 'horror', 'sci-fi', 'scifi', 'action', 'romance'}
+    music_keywords = {
+        # Generic music terms
+        'music', 'song', 'songs', 'album', 'albums', 'artist', 'band', 'musician', 'listen', 'listening', 'audio', 'track', 'tracks', 'playlist',
+        # Music genres
+        'rap', 'hip-hop', 'hiphop', 'hip hop', 'r&b', 'rnb', 'rock', 'pop', 'jazz', 'blues', 'country', 'folk', 'electronic', 'edm', 'techno', 'house', 'trance',
+        'metal', 'punk', 'reggae', 'soul', 'funk', 'disco', 'classical', 'opera', 'gospel', 'latin', 'salsa', 'samba', 'bossa nova',
+        'indie', 'alternative', 'grunge', 'hardcore', 'emo', 'ska', 'dubstep', 'drum and bass', 'drumandbass', 'ambient', 'lo-fi', 'lofi',
+        'trap', 'drill', 'mumble', 'gangsta', 'conscious', 'underground', 'mainstream', 'beat', 'rhythm', 'melody', 'harmony',
+        # Artist/band related
+        'singer', 'rapper', 'dj', 'producer', 'composer', 'vocalist', 'guitarist', 'drummer', 'bassist', 'pianist'
+    }
+    book_keywords = {'book', 'books', 'novel', 'novels', 'author', 'read', 'reading', 'literature', 'chapter', 'chapters', 'fiction', 'non-fiction', 'nonfiction', 'biography', 'memoir', 'poetry', 'poem', 'essay', 'essays'}
     
     detected_types = []
     

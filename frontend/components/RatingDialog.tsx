@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Heart, Bookmark, Send } from 'lucide-react';
+import { X, Star, Send } from 'lucide-react';
 import { addRating, RatingRequest, RecommendationItem } from '@/lib/api';
 import { getCurrentUser } from '@/lib/auth';
 import { Card } from '@/components/ui/card';
@@ -30,8 +30,6 @@ export default function RatingDialog({
   const user = getCurrentUser();
   const [rating, setRating] = useState(existingRating?.rating || 0);
   const [notes, setNotes] = useState(existingRating?.notes || '');
-  const [favorite, setFavorite] = useState(existingRating?.favorite || false);
-  const [wantToConsume, setWantToConsume] = useState(existingRating?.want_to_consume || false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,8 +52,9 @@ export default function RatingDialog({
         item_id: item.id,
         rating,
         notes: notes || undefined,
-        favorite: favorite || undefined,
-        want_to_consume: wantToConsume || undefined,
+        // Preserve existing favorite and watchlist status if they exist
+        favorite: existingRating?.favorite,
+        want_to_consume: existingRating?.want_to_consume,
       };
 
       await addRating(user.id, ratingData);
@@ -140,34 +139,6 @@ export default function RatingDialog({
                     rows={3}
                     disabled={isLoading}
                   />
-                </div>
-
-                {/* Options */}
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setFavorite(!favorite)}
-                    className={`flex-1 px-4 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${
-                      favorite
-                        ? 'bg-destructive/20 border-destructive/50 text-destructive'
-                        : 'border-border bg-background/50 hover:bg-background/70 text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Heart className={`w-5 h-5 ${favorite ? 'fill-destructive' : ''}`} />
-                    Favorite
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setWantToConsume(!wantToConsume)}
-                    className={`flex-1 px-4 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 ${
-                      wantToConsume
-                        ? 'bg-primary/20 border-primary/50 text-primary'
-                        : 'border-border bg-background/50 hover:bg-background/70 text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Bookmark className={`w-5 h-5 ${wantToConsume ? 'fill-primary' : ''}`} />
-                    Watchlist
-                  </button>
                 </div>
 
                 {error && (

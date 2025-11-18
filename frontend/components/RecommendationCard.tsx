@@ -10,6 +10,7 @@ import { RecommendationItem } from '@/lib/api';
 interface RecommendationCardProps {
   item: RecommendationItem;
   onSelect?: (itemId: string) => void;
+  onItemClick?: (itemId: string) => void;
   existingRating?: {
     rating: number;
     notes?: string;
@@ -35,6 +36,7 @@ const categoryColors = {
 export default function RecommendationCard({ 
   item, 
   onSelect, 
+  onItemClick,
   existingRating,
   onRatingUpdated,
   delay = 0
@@ -63,12 +65,21 @@ export default function RecommendationCard({
   // Calculate rating from similarity (0-1 scale to 0-10 scale)
   const rating = item.similarity ? Math.round(item.similarity * 10 * 10) / 10 : undefined;
 
+  const handleCardClick = () => {
+    // Prioritize onItemClick (for ItemDetailModal), then onSelect
+    if (onItemClick) {
+      onItemClick(item.id);
+    } else {
+      onSelect?.(item.id);
+    }
+  };
+
   return (
     <>
       <Card 
         className="group relative overflow-hidden bg-card/60 backdrop-blur-sm border-border hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 cursor-pointer animate-fade-in-up"
         style={{ animationDelay: `${delay}s` }}
-        onClick={() => onSelect?.(item.id)}
+        onClick={handleCardClick}
       >
         <div className="aspect-[2/3] relative overflow-hidden">
           <img 
