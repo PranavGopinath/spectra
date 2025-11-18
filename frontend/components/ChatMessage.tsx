@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, User } from 'lucide-react';
 import RecommendationCard from './RecommendationCard';
 import ItemDetailModal from './ItemDetailModal';
+import { SpectraLogo } from './SpectraLogo';
 import { RecommendationItem } from '@/lib/api';
 
 interface ChatMessageProps {
@@ -23,6 +24,7 @@ interface ChatMessageProps {
     want_to_consume?: boolean;
   }>;
   onRatingUpdated?: () => void;
+  showLogo?: boolean;
 }
 
 export default function ChatMessage({
@@ -32,6 +34,7 @@ export default function ChatMessage({
   isLoading = false,
   userRatings,
   onRatingUpdated,
+  showLogo = false,
 }: ChatMessageProps) {
   const isUser = role === 'user';
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
@@ -66,9 +69,15 @@ export default function ChatMessage({
     <div className="max-w-4xl w-full space-y-4">
       {content && (
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-primary" />
-          </div>
+          {showLogo ? (
+            <div className="flex-shrink-0">
+              <SpectraLogo size="sm" animated={false} />
+            </div>
+          ) : (
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-primary" />
+            </div>
+          )}
           <div className="flex-1">
             <p className="text-foreground leading-relaxed">{content}</p>
           </div>

@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Compass, Library, User, LogOut } from 'lucide-react';
+import { Compass, Library, User, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ChatInterface from './ChatInterface';
 import LibraryView from './LibraryView';
 import ProfileView from './ProfileView';
 import LoginModal from './LoginModal';
 import { BackgroundVisuals } from './background-visuals';
+import { SpectraLogo } from './SpectraLogo';
 import { getCurrentUser, logout as authLogout } from '@/lib/auth';
 import { UserResponse } from '@/lib/api';
 
@@ -70,7 +71,9 @@ export default function AppLayout() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-2xl"
           >
-            <h1 className="text-6xl font-bold text-foreground mb-4">Spectra</h1>
+            <div className="flex justify-center mb-4">
+              <SpectraLogo size="lg" animated={true} />
+            </div>
             <p className="text-xl text-muted-foreground mb-8">
               Discover movies, music, and books that match your unique taste profile
             </p>
@@ -105,12 +108,8 @@ export default function AppLayout() {
         {/* Sidebar Navigation - Dedicated space, no background/border */}
         <aside className="w-64 flex flex-col items-center py-6 px-4 relative">
           {/* Logo - Top */}
-          <div className="flex items-center gap-2 mb-auto">
-            <div className="relative">
-              <Sparkles className="w-6 h-6 text-primary" />
-              <div className="absolute inset-0 blur-xl bg-primary/30 -z-10"></div>
-            </div>
-            <h1 className="text-xl font-bold tracking-tight text-balance">Spectra</h1>
+          <div className="mb-auto">
+            <SpectraLogo size="sm" animated={true} />
           </div>
 
           {/* Navigation Tabs - Centered Vertically */}

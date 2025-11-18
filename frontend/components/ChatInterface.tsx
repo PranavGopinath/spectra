@@ -33,7 +33,7 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "What would you like to discover today? Share what you're into—whether it's movies, music, books, or something else—and let's explore what might resonate with you. 🎬🎵📚",
+      content: "Share what you're into — whether it's movies, music, or books — let's explore what might resonate with you. 🎬🎵📚",
     },
   ]);
   const [input, setInput] = useState('');
@@ -285,6 +285,7 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
                 recommendations={message.recommendations}
                 userRatings={userRatings}
                 onRatingUpdated={() => user && loadUserRatings(user.id)}
+                showLogo={index === 0 && message.role === 'assistant'}
               />
             </div>
           ))}

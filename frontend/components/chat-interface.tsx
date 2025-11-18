@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RecommendationCard } from '@/components/recommendation-card'
 import { BackgroundVisuals } from '@/components/background-visuals'
+import { SpectraLogo } from '@/components/SpectraLogo'
 import { 
   analyzeTaste, 
   getRecommendations, 
@@ -116,15 +117,7 @@ export function ChatInterface() {
       <div className="relative z-10 flex flex-col h-screen max-w-5xl mx-auto p-4 md:p-6">
         {/* Header */}
         <header className="flex items-center justify-between mb-6 animate-fade-in-up">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Sparkles className="w-8 h-8 text-primary" />
-              <div className="absolute inset-0 blur-xl bg-primary/30 -z-10"></div>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-balance">Spectra</h1>
-            </div>
-          </div>
+          <SpectraLogo size="md" animated={true} />
           
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-card/50 backdrop-blur-sm border border-border">
