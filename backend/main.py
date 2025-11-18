@@ -38,9 +38,10 @@ app.add_middleware(
 )
 
 # CORS configuration
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update with your frontend URL in production
+    allow_origins=[FRONTEND_URL],  # Use FRONTEND_URL environment variable
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

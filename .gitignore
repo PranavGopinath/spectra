@@ -23,6 +23,8 @@
 
 # Data files (may want to commit dimension vectors but ignore large datasets)
 /backend/data/*.json
+# Allow dimension_vectors.npy (required for deployment)
+!/backend/data/dimension_vectors.npy
 /backend/data/*.npy
 
 # Testing
