@@ -86,6 +86,25 @@ class GoogleBooksScraper:
         
         return '. '.join(parts) if parts else f"Book: {volume_info.get('title', 'Unknown')}"
     
+    def get_best_cover_image(self, image_links: Dict) -> str:
+        """Get the best available cover image URL from Google Books imageLinks."""
+        if not image_links:
+            return None
+        
+        # Prefer larger images, fallback to smaller ones
+        # Google Books provides: smallThumbnail, thumbnail, small, medium, large, extraLarge
+        for size in ['large', 'medium', 'small', 'thumbnail', 'smallThumbnail']:
+            image_url = image_links.get(size)
+            if image_url:
+                # Google Books URLs sometimes have http://, convert to https://
+                # Also remove any size restrictions in the URL
+                image_url = image_url.replace('http://', 'https://')
+                # Remove zoom parameter if present to get original size
+                image_url = image_url.split('&zoom=')[0].split('?zoom=')[0]
+                return image_url
+        
+        return None
+    
     def parse_book_data(self, book: Dict) -> Dict:
         """Extract relevant data from Google Books API response."""
         volume_info = book.get('volumeInfo', {})
@@ -99,6 +118,10 @@ class GoogleBooksScraper:
             except (ValueError, IndexError):
                 pass
         
+        # Get best available cover image
+        image_links = volume_info.get('imageLinks', {})
+        cover_url = self.get_best_cover_image(image_links)
+        
         return {
             'google_id': book.get('id'),
             'title': volume_info.get('title', 'Unknown'),
@@ -110,7 +133,9 @@ class GoogleBooksScraper:
             'language': volume_info.get('language', 'en'),
             'average_rating': volume_info.get('averageRating'),
             'ratings_count': volume_info.get('ratingsCount'),
-            'thumbnail': volume_info.get('imageLinks', {}).get('thumbnail'),
+            'thumbnail': image_links.get('thumbnail'),  # Keep for backwards compatibility
+            'cover_url': cover_url,  # Best quality cover image
+            'image_url': cover_url,  # Also store as image_url for frontend compatibility
             'preview_link': volume_info.get('previewLink')
         }
 
@@ -185,7 +210,9 @@ def fetch_and_store_books(num_books: int = 250):
                 'language': book_data['language'],
                 'average_rating': book_data['average_rating'],
                 'ratings_count': book_data['ratings_count'],
-                'thumbnail': book_data['thumbnail'],
+                'thumbnail': book_data['thumbnail'],  # Keep for backwards compatibility
+                'cover_url': book_data['cover_url'],  # Best quality cover
+                'image_url': book_data['image_url'],  # Also as image_url for frontend
                 'preview_link': book_data['preview_link'],
                 'google_id': book_data['google_id']
             }
