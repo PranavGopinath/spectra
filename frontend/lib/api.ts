@@ -159,6 +159,41 @@ export async function getItem(itemId: string): Promise<any> {
 }
 
 /**
+ * List all items, optionally filtered by media type
+ */
+export async function listItems(options?: {
+  media_type?: 'movie' | 'book' | 'music';
+  limit?: number;
+  offset?: number;
+}): Promise<{
+  items: OnboardingMediaItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}> {
+  const params = new URLSearchParams();
+  if (options?.media_type) {
+    params.append('media_type', options.media_type);
+  }
+  if (options?.limit) {
+    params.append('limit', options.limit.toString());
+  }
+  if (options?.offset) {
+    params.append('offset', options.offset.toString());
+  }
+
+  const queryString = params.toString();
+  const url = `${API_BASE_URL}/api/item${queryString ? '?' + queryString : ''}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to list items: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
  * Generate contextual intro for recommendations using template-based approach
  */
 export async function generateResponse(
