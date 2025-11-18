@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/", tags=["Items"])
+@router.get("", tags=["Items"])
 async def list_items(
     media_type: Optional[str] = Query(None, description="Filter by media type (movie, book, music)"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of items to return"),
