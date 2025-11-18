@@ -6,12 +6,10 @@ import { Send, Sparkles } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import OnboardingFlow from './OnboardingFlow';
 import { 
-  analyzeTaste, 
   getRecommendations, 
   getUserRecommendations,
-  getDimensions, 
-  generateResponse as generateLLMResponse, 
-  TasteAnalysisResponse, 
+  generateResponse as generateLLMResponse,
+  detectMediaType,
   RecommendationsResponse,
   UserResponse 
 } from '@/lib/api';
@@ -21,7 +19,6 @@ import { getUserRatings } from '@/lib/api';
 interface Message {
   role: 'user' | 'assistant';
   content?: string;
-  tasteAnalysis?: TasteAnalysisResponse;
   recommendations?: RecommendationsResponse;
 }
 
@@ -41,7 +38,6 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [dimensionNames, setDimensionNames] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -76,17 +72,6 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
     }
   };
 
-  // Load dimension names on mount
-  useEffect(() => {
-    getDimensions()
-      .then((dims) => {
-        setDimensionNames(dims.map((d) => d.name));
-      })
-      .catch((error) => {
-        console.error('Failed to load dimensions:', error);
-      });
-  }, []);
-
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -104,51 +89,78 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
     setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
 
     try {
-      // Analyze taste
-      const tasteAnalysis = await analyzeTaste(userMessage);
-      
-      // Generate contextual intro for recommendations
+      // Generate contextual intro for recommendations and detect media type
       let contextualResponse: string;
+      let detectedMediaTypes: string[] | null = null;
       try {
-        contextualResponse = await generateLLMResponse(userMessage, tasteAnalysis);
+        // Generate response without taste analysis (we don't show it in chat)
+        const responseData = await generateLLMResponse(userMessage);
+        contextualResponse = responseData.response;
+        detectedMediaTypes = responseData.detected_media_types || null;
       } catch (error) {
-        // Fallback if generation fails
+        // Fallback if generation fails - detect media type locally
         console.warn('Response generation failed, using fallback:', error);
-        contextualResponse = "I've analyzed your taste preferences! Here's your taste profile:";
+        contextualResponse = "Here are some recommendations based on your query:";
+        detectedMediaTypes = detectMediaType(userMessage);
       }
       
-      // Add assistant message with taste analysis
+      // If media type detection failed, try local detection as fallback
+      if (!detectedMediaTypes) {
+        detectedMediaTypes = detectMediaType(userMessage);
+      }
+      
+      // Get recommendations based on user's query text (not profile-based)
+      // This uses 384D embedding similarity search for semantic matching
+      // Filter by detected media type if available
+      let recommendations: RecommendationsResponse;
+      try {
+        recommendations = await getRecommendations(userMessage, { 
+          top_k: 5,
+          media_types: detectedMediaTypes || undefined
+        });
+        
+        // Check if we got any recommendations
+        const hasRecommendations = 
+          (recommendations.movie && recommendations.movie.length > 0) ||
+          (recommendations.music && recommendations.music.length > 0) ||
+          (recommendations.book && recommendations.book.length > 0);
+        
+        if (!hasRecommendations) {
+          // If no recommendations found, try user-specific as fallback (if logged in)
+          if (user) {
+            try {
+              recommendations = await getUserRecommendations(user.id, { top_k: 5 });
+            } catch {
+              // If that also fails, show message
+              contextualResponse = "I couldn't find any recommendations matching your query. Try being more specific!";
+            }
+          } else {
+            contextualResponse = "I couldn't find any recommendations matching your query. Try being more specific!";
+          }
+        }
+      } catch (error) {
+        console.error('Error getting recommendations:', error);
+        // Try user-specific as fallback if logged in
+        if (user) {
+          try {
+            recommendations = await getUserRecommendations(user.id, { top_k: 5 });
+          } catch {
+            throw error; // Re-throw original error
+          }
+        } else {
+          throw error;
+        }
+      }
+      
+      // Add assistant message with recommendations (no taste analysis)
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
           content: contextualResponse,
-          tasteAnalysis,
+          recommendations,
         },
       ]);
-
-      // Get recommendations (use user-specific if logged in)
-      let recommendations: RecommendationsResponse;
-      if (user) {
-        try {
-          recommendations = await getUserRecommendations(user.id, { top_k: 5 });
-        } catch {
-          // Fallback to text-based if user has no ratings
-          recommendations = await getRecommendations(userMessage, { top_k: 5 });
-        }
-      } else {
-        recommendations = await getRecommendations(userMessage, { top_k: 5 });
-      }
-      
-      // Update last message with recommendations
-      setMessages((prev) => {
-        const newMessages = [...prev];
-        const lastMessage = newMessages[newMessages.length - 1];
-        if (lastMessage.role === 'assistant') {
-          lastMessage.recommendations = recommendations;
-        }
-        return newMessages;
-      });
     } catch (error) {
       console.error('Error:', error);
       setMessages((prev) => [
@@ -203,9 +215,7 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
               <ChatMessage
                 role={message.role}
                 content={message.content}
-                tasteAnalysis={message.tasteAnalysis}
                 recommendations={message.recommendations}
-                dimensionNames={dimensionNames}
                 userRatings={userRatings}
                 onRatingUpdated={() => user && loadUserRatings(user.id)}
               />

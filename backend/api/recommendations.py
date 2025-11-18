@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from schemas.recommendation import RecommendRequest, SimilarRequest, ExplainRequest, GenerateResponseRequest
 from dependencies import get_recommender
 from recommender import SpectraRecommender
-from typing import Optional
+from typing import Optional, List
 import logging
 import random
 
@@ -78,36 +78,51 @@ async def explain_match(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def detect_media_type(user_input: str) -> Optional[List[str]]:
+    """Detect media type(s) from user input."""
+    user_input_lower = user_input.lower()
+    
+    # Media type keywords
+    movie_keywords = {'movie', 'movies', 'film', 'films', 'cinema', 'cinematic', 'director', 'actor', 'actress', 'watch', 'watching'}
+    music_keywords = {'music', 'song', 'songs', 'album', 'albums', 'artist', 'band', 'musician', 'listen', 'listening', 'audio', 'track', 'tracks'}
+    book_keywords = {'book', 'books', 'novel', 'novels', 'author', 'read', 'reading', 'literature', 'chapter', 'chapters'}
+    
+    detected_types = []
+    
+    # Check for each media type
+    if any(keyword in user_input_lower for keyword in movie_keywords):
+        detected_types.append('movie')
+    if any(keyword in user_input_lower for keyword in music_keywords):
+        detected_types.append('music')
+    if any(keyword in user_input_lower for keyword in book_keywords):
+        detected_types.append('book')
+    
+    # Return None if no specific type detected (means search all types)
+    return detected_types if detected_types else None
+
+
 @router.post("/generate-response", tags=["Chat"])
 async def generate_response(
     request: GenerateResponseRequest,
     recommender: SpectraRecommender = Depends(get_recommender)
 ):
     """Generate a brief intro for recommendations using template-based approach."""
-    # Template-based generation (fast, instant response)
-    # Extract keywords from user input for personalized intro
-    user_input = request.user_input.lower()
+    # Detect media type from query
+    detected_media_types = detect_media_type(request.user_input)
     
-    # Extract key terms
-    common_words = {'i', 'love', 'like', 'enjoy', 'want', 'the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'am'}
-    words = [w for w in user_input.split() if w not in common_words and len(w) > 3]
-    keywords = words[:3]  # Take first 3 meaningful words
-    
-    # Generate intro based on keywords
+    # Generic response templates (no keyword interpolation)
     templates = [
-        "Based on your interest in {keyword}, here are some recommendations:",
-        "I found some great {keyword} recommendations for you:",
-        "Here are some {keyword} picks based on your preferences:",
-        "Based on your love of {keyword}, I think you'll enjoy these:",
+        "Here are some recommendations I think you'll enjoy:",
+        "I found some great picks for you:",
+        "Based on your preferences, here are some recommendations:",
+        "Here are some recommendations that might resonate with you:",
+        "I've curated some recommendations based on what you're looking for:",
     ]
     
-    if keywords:
-        template = random.choice(templates)
-        intro = template.format(keyword=keywords[0])
-    else:
-        intro = "Here are some recommendations based on your preferences:"
+    intro = random.choice(templates)
     
     return {
-        "response": intro
+        "response": intro,
+        "detected_media_types": detected_media_types
     }
 

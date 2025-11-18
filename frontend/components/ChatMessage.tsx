@@ -2,20 +2,17 @@
 
 import { motion } from 'framer-motion';
 import { Sparkles, User } from 'lucide-react';
-import TasteRadar from './TasteRadar';
 import RecommendationCard from './RecommendationCard';
-import { TasteAnalysisResponse, RecommendationItem } from '@/lib/api';
+import { RecommendationItem } from '@/lib/api';
 
 interface ChatMessageProps {
   role: 'user' | 'assistant';
   content?: string;
-  tasteAnalysis?: TasteAnalysisResponse;
   recommendations?: {
     movie?: RecommendationItem[];
     music?: RecommendationItem[];
     book?: RecommendationItem[];
   };
-  dimensionNames?: string[];
   isLoading?: boolean;
   userRatings?: Map<string, {
     rating: number;
@@ -29,9 +26,7 @@ interface ChatMessageProps {
 export default function ChatMessage({
   role,
   content,
-  tasteAnalysis,
   recommendations,
-  dimensionNames = [],
   isLoading = false,
   userRatings,
   onRatingUpdated,
@@ -77,52 +72,16 @@ export default function ChatMessage({
         </div>
       )}
       
-      {tasteAnalysis && dimensionNames.length > 0 && (
-        <div className="ml-11 space-y-4">
-          <div className="bg-card/60 backdrop-blur-sm border border-border rounded-2xl p-6">
-            <h4 className="text-lg font-semibold text-foreground mb-4">Your Taste Profile</h4>
-            <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl p-4 mb-4">
-              <TasteRadar 
-                tasteVector={tasteAnalysis.taste_vector} 
-                dimensionNames={dimensionNames}
-              />
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {tasteAnalysis.breakdown.map((dim, idx) => {
-                const scoreAbs = Math.abs(dim.score);
-                const isPositive = dim.score > 0;
-                return (
-                  <div
-                    key={idx}
-                    className="p-3 bg-card/40 backdrop-blur-sm rounded-lg border border-border hover:border-primary/50 transition-all"
-                  >
-                    <div className="font-semibold text-foreground text-sm mb-1">
-                      {dim.dimension}
-                    </div>
-                    <div className="text-xs text-muted-foreground mb-2">{dim.tendency}</div>
-                    <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${
-                          isPositive 
-                            ? 'bg-gradient-to-r from-primary to-secondary' 
-                            : 'bg-gradient-to-r from-accent to-secondary'
-                        }`}
-                        style={{ width: `${scoreAbs * 100}%` }}
-                      />
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1 text-right">
-                      {dim.score > 0 ? '+' : ''}{dim.score.toFixed(2)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-      
       {recommendations && (
         <div className="ml-11 space-y-6">
+          {(!recommendations.movie || recommendations.movie.length === 0) &&
+           (!recommendations.music || recommendations.music.length === 0) &&
+           (!recommendations.book || recommendations.book.length === 0) && (
+            <div className="text-muted-foreground text-sm italic">
+              No recommendations found. Try refining your search!
+            </div>
+          )}
+          
           {recommendations.movie && recommendations.movie.length > 0 && (
             <div>
               <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">

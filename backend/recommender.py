@@ -56,7 +56,7 @@ class SpectraRecommender:
         Get recommendations based on taste query.
         
         Args:
-            query: User text, taste vector, or list of floats
+            query: User text (uses 384D embedding), taste vector (8D), or list of floats
             media_types: List of media types to search (None = all)
             top_k: Number of recommendations per media type
             min_year: Filter by minimum year
@@ -65,27 +65,47 @@ class SpectraRecommender:
         Returns:
             Dict mapping media types to lists of recommendations
         """
-        # Convert query to taste vector if needed
-        if isinstance(query, str):
-            taste_vector = self.engine.text_to_taste_vector(query)
-        elif isinstance(query, list):
-            taste_vector = np.array(query)
-        else:
-            taste_vector = query
-        
         # Default to all media types if not specified
         if media_types is None:
             media_types = ['movie', 'music', 'book']
         
         results = {}
         
+        # If query is text, use 384D embedding for semantic similarity search
+        # If query is already a vector/list, determine if it's 8D (taste) or 384D (embedding)
+        use_embedding_search = False
+        search_vector = None
+        
+        if isinstance(query, str):
+            # Text query: use 384D embedding for better semantic matching
+            embedding_384d = self.engine.embed(query)
+            use_embedding_search = True
+            search_vector = embedding_384d
+        elif isinstance(query, list):
+            search_vector = np.array(query)
+            # Heuristic: if length is 8, assume it's a taste vector; if 384, assume embedding
+            use_embedding_search = len(search_vector) == 384
+        else:
+            # numpy array
+            search_vector = query
+            use_embedding_search = len(search_vector) == 384
+        
         for media_type in media_types:
-            # Search database
-            items = self.db.media.search_by_taste(
-                taste_vector=taste_vector,
-                media_type=media_type,
-                limit=top_k * 2  # Get extra for filtering
-            )
+            # Search database using appropriate method
+            if use_embedding_search:
+                # Use 384D embedding search for semantic similarity
+                items = self.db.media.search_by_embedding(
+                    embedding=search_vector,
+                    media_type=media_type,
+                    limit=top_k * 2  # Get extra for filtering
+                )
+            else:
+                # Use 8D taste vector search
+                items = self.db.media.search_by_taste(
+                    taste_vector=search_vector,
+                    media_type=media_type,
+                    limit=top_k * 2  # Get extra for filtering
+                )
             
             # Apply year filtering if specified
             if min_year or max_year:

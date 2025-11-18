@@ -198,9 +198,9 @@ export async function listItems(options?: {
  */
 export async function generateResponse(
   userInput: string,
-  tasteAnalysis: TasteAnalysisResponse,
+  tasteAnalysis?: TasteAnalysisResponse | null,
   conversationHistory?: Array<{ role: string; content: string }>
-): Promise<string> {
+): Promise<{ response: string; detected_media_types?: string[] }> {
   // Template-based generation (fast, instant response)
   const response = await fetch(`${API_BASE_URL}/api/generate-response`, {
     method: 'POST',
@@ -209,7 +209,7 @@ export async function generateResponse(
     },
     body: JSON.stringify({
       user_input: userInput,
-      taste_analysis: tasteAnalysis,
+      taste_analysis: tasteAnalysis || null,
       conversation_history: conversationHistory,
     }),
   });
@@ -219,7 +219,35 @@ export async function generateResponse(
   }
 
   const data = await response.json();
-  return data.response;
+  return {
+    response: data.response,
+    detected_media_types: data.detected_media_types || null
+  };
+}
+
+/**
+ * Detect media type from user input (frontend fallback)
+ */
+export function detectMediaType(userInput: string): string[] | null {
+  const input = userInput.toLowerCase();
+  
+  const movieKeywords = ['movie', 'movies', 'film', 'films', 'cinema', 'cinematic', 'director', 'actor', 'actress', 'watch', 'watching'];
+  const musicKeywords = ['music', 'song', 'songs', 'album', 'albums', 'artist', 'band', 'musician', 'listen', 'listening', 'audio', 'track', 'tracks'];
+  const bookKeywords = ['book', 'books', 'novel', 'novels', 'author', 'read', 'reading', 'literature', 'chapter', 'chapters'];
+  
+  const detected: string[] = [];
+  
+  if (movieKeywords.some(kw => input.includes(kw))) {
+    detected.push('movie');
+  }
+  if (musicKeywords.some(kw => input.includes(kw))) {
+    detected.push('music');
+  }
+  if (bookKeywords.some(kw => input.includes(kw))) {
+    detected.push('book');
+  }
+  
+  return detected.length > 0 ? detected : null;
 }
 
 // User Management APIs

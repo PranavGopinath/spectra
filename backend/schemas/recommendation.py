@@ -30,7 +30,7 @@ class ExplainRequest(BaseModel):
 
 class GenerateResponseRequest(BaseModel):
     user_input: str = Field(..., description="User's message")
-    taste_analysis: Dict[str, Any] = Field(..., description="Taste analysis result")
+    taste_analysis: Optional[Dict[str, Any]] = Field(default=None, description="Taste analysis result (optional)")
     conversation_history: Optional[List[Dict[str, str]]] = Field(default=None, description="Previous conversation messages")
 
 
