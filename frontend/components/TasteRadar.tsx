@@ -17,22 +17,44 @@ export default function TasteRadar({ tasteVector, dimensionNames }: TasteRadarPr
     fullMark: 1,
   }));
 
-  // Get color based on score
-  const getColor = (score: number) => {
-    if (score > 0.5) return '#a855f7'; // Purple
-    if (score > 0) return '#ec4899'; // Pink
-    if (score > -0.5) return '#3b82f6'; // Blue
-    return '#8b5cf6'; // Indigo
-  };
-
-  // Calculate average score for gradient
-  const avgScore = tasteVector.reduce((a, b) => a + Math.abs(b), 0) / tasteVector.length;
-  const primaryColor = avgScore > 0.5 ? '#a855f7' : '#ec4899';
+  // Rich gradient colors matching app theme: purple/magenta (primary), yellow/gold (secondary), pink (accent)
+  // Plus complementary colors for variety: cyan, blue, teal, indigo, violet, orange
+  const gradientId = 'tasteRadarGradient';
+  const gradientColors = [
+    '#a855f7', // Purple (primary theme)
+    '#ec4899', // Pink (accent theme)
+    '#f59e0b', // Amber/Gold (secondary theme)
+    '#06b6d4', // Cyan
+    '#3b82f6', // Blue
+    '#8b5cf6', // Violet
+    '#14b8a6', // Teal
+    '#6366f1', // Indigo
+    '#f97316', // Orange
+    '#d946ef', // Fuchsia
+    '#a855f7', // Back to purple for seamless loop
+  ];
 
   return (
     <div className="w-full h-96 relative">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data}>
+          <defs>
+            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+              {gradientColors.map((color, index) => (
+                <stop
+                  key={index}
+                  offset={`${(index / (gradientColors.length - 1)) * 100}%`}
+                  stopColor={color}
+                  stopOpacity={0.7}
+                />
+              ))}
+            </linearGradient>
+            <radialGradient id={`${gradientId}Radial`} cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity={0.3} />
+              <stop offset="50%" stopColor="#8b5cf6" stopOpacity={0.2} />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity={0.1} />
+            </radialGradient>
+          </defs>
           <PolarGrid 
             stroke="rgba(255, 255, 255, 0.1)" 
             strokeWidth={1}
@@ -56,11 +78,11 @@ export default function TasteRadar({ tasteVector, dimensionNames }: TasteRadarPr
           <Radar
             name="Taste"
             dataKey="score"
-            stroke={primaryColor}
-            fill={primaryColor}
-            fillOpacity={0.3}
+            stroke={`url(#${gradientId})`}
+            fill={`url(#${gradientId}Radial)`}
+            fillOpacity={0.4}
             strokeWidth={2}
-            dot={{ fill: primaryColor, r: 4 }}
+            dot={{ fill: '#a855f7', r: 4 }}
           />
         </RadarChart>
       </ResponsiveContainer>
@@ -73,8 +95,7 @@ export default function TasteRadar({ tasteVector, dimensionNames }: TasteRadarPr
           transition={{ delay: 0.8 }}
           className="text-center"
         >
-          <div className="text-2xl font-bold gradient-text">Taste</div>
-          <div className="text-xs text-white/40 mt-1">8 Dimensions</div>
+          <div className="text-2xl font-bold gradient-text">Spectrum</div>
         </motion.div>
       </div>
     </div>
