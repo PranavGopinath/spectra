@@ -71,10 +71,11 @@ export function ChatInterface() {
       // Generate contextual intro for recommendations
       let contextualResponse: string
       try {
-        contextualResponse = await generateResponse(
+        const responseData = await generateResponse(
           currentInput,
           tasteAnalysis
         )
+        contextualResponse = responseData.response
       } catch (error) {
         console.warn('Response generation failed, using fallback:', error)
         contextualResponse = 'Based on your interests, here are some recommendations I think you\'ll love:'

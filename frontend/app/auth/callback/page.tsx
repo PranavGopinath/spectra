@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
@@ -9,7 +9,7 @@ import { getUser, getUserRatings } from '@/lib/api';
 import { BackgroundVisuals } from '@/components/background-visuals';
 import OnboardingFlow from '@/components/OnboardingFlow';
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -106,5 +106,30 @@ export default function AuthCallbackPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="relative min-h-screen overflow-hidden">
+        <BackgroundVisuals />
+        <div className="relative z-10 flex items-center justify-center h-screen">
+          <div className="text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center"
+            >
+              <Sparkles className="w-16 h-16 text-primary mx-auto mb-4 animate-pulse" />
+              <h1 className="text-3xl font-bold text-foreground mb-2">Loading...</h1>
+              <p className="text-muted-foreground">Please wait.</p>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }
