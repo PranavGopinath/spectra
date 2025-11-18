@@ -95,6 +95,17 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
       try {
         recommendations = await getUserRecommendations(user.id, { top_k: 5 });
         
+        // Ensure recommendations has the expected structure (handle empty object case)
+        if (!recommendations || typeof recommendations !== 'object') {
+          recommendations = { movie: [], music: [], book: [] };
+        } else {
+          recommendations = {
+            movie: recommendations.movie || [],
+            music: recommendations.music || [],
+            book: recommendations.book || []
+          };
+        }
+        
         // Check if we got any recommendations
         const hasRecommendations = 
           (recommendations.movie && recommendations.movie.length > 0) ||

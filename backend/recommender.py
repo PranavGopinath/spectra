@@ -265,7 +265,10 @@ class SpectraRecommender:
         # Compute user's taste profile
         profile = self.compute_user_taste_profile(user_id)
         if not profile:
-            return {}
+            # Return empty results with proper structure
+            if media_types is None:
+                media_types = ['movie', 'music', 'book']
+            return {media_type: [] for media_type in media_types}
         
         # Get items user has already rated (to exclude)
         rated_item_ids = set()
@@ -305,6 +308,11 @@ class SpectraRecommender:
                 })
             
             results[media_type] = formatted
+        
+        # Ensure all requested media types are in the results, even if empty
+        for media_type in media_types:
+            if media_type not in results:
+                results[media_type] = []
         
         return results
     
