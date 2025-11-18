@@ -216,6 +216,23 @@ def fetch_and_store_music(num_artists: int = 250):
             
             # Prepare metadata
             tags = artist_info.get('tags', {}).get('tag', [])
+            
+            # Extract image URL (prefer largest available)
+            image_url = None
+            images = artist_info.get('image', [])
+            if images:
+                size_preference = ['mega', 'extralarge', 'large', 'medium', 'small']
+                for size in size_preference:
+                    for img in images:
+                        if img.get('size') == size and img.get('#text'):
+                            url = img['#text']
+                            # Skip placeholder images
+                            if url and '2a96cbd8b46e442fc41c2b86b821562f' not in url:
+                                image_url = url
+                                break
+                    if image_url:
+                        break
+            
             metadata = {
                 'genres': [t['name'] for t in tags[:5]],
                 'listeners': int(artist_info.get('stats', {}).get('listeners', 0)),
@@ -224,6 +241,9 @@ def fetch_and_store_music(num_artists: int = 250):
                 'top_albums': [a['name'] for a in albums[:3]],
                 'mbid': artist_info.get('mbid')
             }
+            
+            if image_url:
+                metadata['image_url'] = image_url
             
             # Insert into database
             item = {

@@ -168,13 +168,21 @@ class MediaRepository:
         
         results = []
         for row in rows:
+            # Parse metadata if it's a JSON string
+            metadata = row[5]
+            if isinstance(metadata, str):
+                try:
+                    metadata = json.loads(metadata)
+                except (json.JSONDecodeError, TypeError):
+                    metadata = {}
+            
             results.append({
                 'id': row[0],
                 'title': row[1],
                 'media_type': row[2],
                 'year': row[3],
                 'description': row[4],
-                'metadata': row[5]
+                'metadata': metadata
             })
         
         return results
@@ -189,4 +197,16 @@ class MediaRepository:
             self.cursor.execute(query)
         
         return self.cursor.fetchone()[0]
+    
+    def update_metadata(self, item_id: str, metadata: Dict):
+        """Update metadata for an existing item."""
+        query = """
+            UPDATE media_items
+            SET metadata = metadata || %s::jsonb,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """
+        
+        self.cursor.execute(query, (json.dumps(metadata), item_id))
+        self.conn.commit()
 

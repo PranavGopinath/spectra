@@ -7,6 +7,7 @@ import { getUserRatings, deleteRating, UserRatingWithItem, UserResponse } from '
 import { getCurrentUser } from '@/lib/auth';
 import TasteRadar from './TasteRadar';
 import RecommendationCard from './RecommendationCard';
+import MediaMosaic from './MediaMosaic';
 import { Card } from '@/components/ui/card';
 
 interface UserProfileProps {
@@ -88,6 +89,18 @@ export default function UserProfile({ user, dimensionNames, onRatingDeleted }: U
           </div>
         </div>
       </Card>
+
+      {/* Media Mosaic */}
+      {filteredRatings.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="bg-card/60 backdrop-blur-sm border-border p-6">
+            <MediaMosaic items={filteredRatings} />
+          </Card>
+        </motion.div>
+      )}
 
       {/* Taste Profile */}
       {tasteProfile && (

@@ -38,7 +38,7 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi! I'm Spectra, your taste discovery assistant. Tell me about your preferences in movies, music, or books, and I'll help you discover new favorites across all media types! 🎬🎵📚",
+      content: "What would you like to discover today? Share what you're into—whether it's movies, music, books, or something else—and let's explore what might resonate with you. 🎬🎵📚",
     },
   ]);
   const [input, setInput] = useState('');
@@ -274,7 +274,6 @@ export default function ChatInterface() {
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-balance">Spectra</h1>
-              <p className="text-sm text-muted-foreground">Your Entertainment Curator</p>
             </div>
           </div>
           
