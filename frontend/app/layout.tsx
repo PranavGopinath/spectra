@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Space_Grotesk } from 'next/font/google'
 import './globals.css'
@@ -25,6 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased ${geist.className} ${geistMono.className} ${spaceGrotesk.variable}`}>
         {children}
+        <Analytics />
       </body>
     </html>
   )
