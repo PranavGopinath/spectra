@@ -25,9 +25,14 @@ jobs:
 
       - name: Copy backend files
         run: |
+          # Copy all backend files
           cp -r main-repo/backend/* hf-space/
-          # Remove .env if it exists (secrets are in HF Space settings)
+          # Remove files/directories not needed in production
+          rm -rf hf-space/scrapers
+          rm -f hf-space/test_*.py
           rm -f hf-space/.env
+          rm -rf hf-space/__pycache__
+          rm -rf hf-space/*/__pycache__
 
       - name: Commit and push to HF Space
         run: |
@@ -37,4 +42,7 @@ jobs:
           git add .
           git diff --staged --quiet || git commit -m "Auto-deploy from GitHub: ${{ github.sha }}"
           git push
+
+
+
 
