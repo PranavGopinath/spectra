@@ -11,14 +11,19 @@ interface MediaMosaicProps {
 export default function MediaMosaic({ items }: MediaMosaicProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
-  // Sort items by rating to determine size
-  const sortedItems = [...items].sort((a, b) => b.rating - a.rating);
+  // Sort items by rating to determine size (items without ratings go to end)
+  const sortedItems = [...items].sort((a, b) => {
+    const ratingA = a.rating ?? 0;
+    const ratingB = b.rating ?? 0;
+    return ratingB - ratingA;
+  });
 
   // Calculate size based on rating (1-5 scale)
-  const getSizeClass = (rating: number, index: number) => {
-    if (rating >= 4.5) return 'col-span-2 row-span-2'; // Largest
-    if (rating >= 4.0) return index % 3 === 0 ? 'col-span-2 row-span-1' : 'col-span-1 row-span-2'; // Large
-    if (rating >= 3.5) return 'col-span-1 row-span-1'; // Medium
+  const getSizeClass = (rating: number | undefined, index: number) => {
+    const ratingValue = rating ?? 0;
+    if (ratingValue >= 4.5) return 'col-span-2 row-span-2'; // Largest
+    if (ratingValue >= 4.0) return index % 3 === 0 ? 'col-span-2 row-span-1' : 'col-span-1 row-span-2'; // Large
+    if (ratingValue >= 3.5) return 'col-span-1 row-span-1'; // Medium
     return 'col-span-1 row-span-1'; // Small
   };
 
@@ -63,7 +68,11 @@ export default function MediaMosaic({ items }: MediaMosaicProps) {
     );
   }
 
-  const averageRating = items.reduce((acc, item) => acc + item.rating, 0) / items.length;
+  // Calculate average rating only from items that have ratings
+  const ratedItems = items.filter(item => item.rating !== undefined);
+  const averageRating = ratedItems.length > 0
+    ? ratedItems.reduce((acc, item) => acc + (item.rating ?? 0), 0) / ratedItems.length
+    : 0;
 
   return (
     <div className="relative w-full">
@@ -72,7 +81,7 @@ export default function MediaMosaic({ items }: MediaMosaicProps) {
         <div>
           <h2 className="text-2xl font-bold text-foreground mb-1">Your Collection</h2>
           <p className="text-sm text-muted-foreground">
-            {items.length} items rated • Average {averageRating.toFixed(1)} ⭐
+            {items.length} items {ratedItems.length > 0 && `• ${ratedItems.length} rated • Average ${averageRating.toFixed(1)} ⭐`}
           </p>
         </div>
         
@@ -160,15 +169,17 @@ export default function MediaMosaic({ items }: MediaMosaicProps) {
                     {getCategoryIcon(item.item.media_type)}
                   </div>
                   
-                  <div className={`
-                    flex items-center gap-1 px-2 py-1 rounded-full
-                    bg-background/80 backdrop-blur-sm
-                    transition-all duration-300
-                    ${isHovered ? 'scale-110' : 'scale-100'}
-                  `}>
-                    <Star className="w-3 h-3 fill-secondary text-secondary" />
-                    <span className="text-xs font-bold text-foreground">{item.rating}</span>
-                  </div>
+                  {item.rating !== undefined && (
+                    <div className={`
+                      flex items-center gap-1 px-2 py-1 rounded-full
+                      bg-background/80 backdrop-blur-sm
+                      transition-all duration-300
+                      ${isHovered ? 'scale-110' : 'scale-100'}
+                    `}>
+                      <Star className="w-3 h-3 fill-secondary text-secondary" />
+                      <span className="text-xs font-bold text-foreground">{item.rating}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bottom: Title (appears on hover) */}

@@ -228,8 +228,9 @@ function RatedItemIcon({ rating, offsetX, offsetY, containerSize, onItemClick }:
   const imageUrl = getImageUrl();
   const hasImage = imageUrl && imageUrl !== '/placeholder.svg';
 
-  // Get color based on rating
-  const getRatingColor = (ratingValue: number) => {
+  // Get color based on rating (defaults to muted if no rating)
+  const getRatingColor = (ratingValue: number | undefined) => {
+    if (ratingValue === undefined) return 'from-muted/30 to-muted/20';
     if (ratingValue >= 4) return 'from-primary/30 to-primary/20';
     if (ratingValue >= 3) return 'from-secondary/30 to-secondary/20';
     return 'from-muted/30 to-muted/20';
@@ -290,15 +291,17 @@ function RatedItemIcon({ rating, offsetX, offsetY, containerSize, onItemClick }:
           </div>
         )}
         
-        {/* Rating indicator */}
-        <div className="absolute -bottom-1 -right-1 bg-background/95 rounded-full p-1 border border-primary/30 shadow-sm">
-          <div className="flex items-center gap-0.5">
-            <Star className={`${baseSize > 60 ? 'w-3 h-3' : 'w-2 h-2'} text-secondary fill-secondary`} />
-            <span className={`${baseSize > 60 ? 'text-xs' : 'text-[10px]'} font-bold text-foreground`}>
-              {rating.rating}
-            </span>
+        {/* Rating indicator - only show if rating exists */}
+        {rating.rating !== undefined && (
+          <div className="absolute -bottom-1 -right-1 bg-background/95 rounded-full p-1 border border-primary/30 shadow-sm">
+            <div className="flex items-center gap-0.5">
+              <Star className={`${baseSize > 60 ? 'w-3 h-3' : 'w-2 h-2'} text-secondary fill-secondary`} />
+              <span className={`${baseSize > 60 ? 'text-xs' : 'text-[10px]'} font-bold text-foreground`}>
+                {rating.rating}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Favorite indicator */}
         {rating.favorite && (
@@ -321,7 +324,7 @@ function RatedItemIcon({ rating, offsetX, offsetY, containerSize, onItemClick }:
       >
         <p className="text-xs font-medium text-foreground">{rating.item.title}</p>
         <p className="text-xs text-muted-foreground capitalize">
-          {rating.item.media_type} • {rating.rating}/5
+          {rating.item.media_type}{rating.rating !== undefined ? ` • ${rating.rating}/5` : ''}
         </p>
       </motion.div>
     </motion.div>

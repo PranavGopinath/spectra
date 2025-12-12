@@ -201,21 +201,23 @@ export default function UserProfile({ user, dimensionNames, onRatingDeleted }: U
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-5 h-5 ${
-                              i < rating.rating
-                                ? 'text-secondary fill-secondary'
-                                : 'text-muted-foreground/30'
-                            }`}
-                          />
-                        ))}
+                    {rating.rating !== undefined && (
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-5 h-5 ${
+                                i < rating.rating!
+                                  ? 'text-secondary fill-secondary'
+                                  : 'text-muted-foreground/30'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-muted-foreground">{rating.rating}/5</span>
                       </div>
-                      <span className="text-sm text-muted-foreground">{rating.rating}/5</span>
-                    </div>
+                    )}
 
                     {rating.notes && (
                       <p className="text-sm text-foreground/70 mb-3 italic">"{rating.notes}"</p>

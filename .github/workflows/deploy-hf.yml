@@ -10,6 +10,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v3
@@ -19,8 +21,6 @@ jobs:
       - name: Checkout HF Space
         uses: actions/checkout@v3
         with:
-          repository: pranavgo/spectra
-          token: ${{ secrets.HF_TOKEN }}
           path: hf-space
 
       - name: Copy backend files
