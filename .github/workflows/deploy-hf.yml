@@ -2,65 +2,43 @@ name: Deploy to Hugging Face Spaces
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'backend/**'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v3
         with:
           path: main-repo
 
-      - name: Setup Git
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          # Configure git to use token for authentication
-          git config --global credential.helper store
-          echo "https://${{ secrets.HF_TOKEN }}@huggingface.co" > ~/.git-credentials
-
       - name: Clone HF Space repository
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Clone HF Space repo (separate from GitHub repo)
-          git clone https://${{ secrets.HF_TOKEN }}@huggingface.co/spaces/pranavgo/spectra hf-space || true
+          git clone https://pranavgo:${HF_TOKEN}@huggingface.co/spaces/pranavgo/spectra hf-space || true
           cd hf-space
-          # Configure remote to use token
-          git remote set-url origin https://${{ secrets.HF_TOKEN }}@huggingface.co/spaces/pranavgo/spectra
+          git remote set-url origin https://pranavgo:${HF_TOKEN}@huggingface.co/spaces/pranavgo/spectra
           git pull origin main || true
 
       - name: Copy backend files
         run: |
-          # Copy all backend files
           cp -r main-repo/backend/* hf-space/
-          # Copy requirements.txt to root for HF build
           cp main-repo/backend/requirements.txt hf-space/requirements.txt
-          # Remove files/directories not needed in production
           rm -rf hf-space/scrapers
           rm -f hf-space/test_*.py
           rm -f hf-space/.env
-          rm -rf hf-space/__pycache__
-          rm -rf hf-space/*/__pycache__
+          rm -rf hf-space/**/__pycache__
 
       - name: Commit and push to HF Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           cd hf-space
           git add .
           if ! git diff --staged --quiet; then
-            git commit -m "Auto-deploy from GitHub: ${{ github.sha }}"
-            # Push only to HF Space repository (not GitHub)
-            git push origin main
-            echo "✅ Pushed to Hugging Face Space (not GitHub)"
-          else
-            echo "No changes to deploy"
-          fi
-
-
-
-
+            g
