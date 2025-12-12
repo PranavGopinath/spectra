@@ -20,31 +20,30 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # Clean clone of the existing HF Space repo
-          rm -rf hf-space
-          git clone https://pranavgo:${HF_TOKEN}@huggingface.co/spaces/pranavgo/spectra hf-space
+          git clone https://pranavgo:${HF_TOKEN}@huggingface.co/spaces/pranavgo/spectra hf-space || true
           cd hf-space
           git remote set-url origin https://pranavgo:${HF_TOKEN}@huggingface.co/spaces/pranavgo/spectra
           git pull origin main || true
 
-      - name: Copy backend files
+      - name: Copy backend files into HF Space (preserve structure)
         run: |
-          # Ensure backend folder exists at root and sync into it (preserve root files like Dockerfile/requirements)
+          # Ensure backend directory exists on HF Space
           mkdir -p hf-space/backend
+
+          # Sync entire backend folder INTO hf-space/backend/
+          # This results in: hf-space/backend/... matching local backend/...
           rsync -av --delete --exclude ".git" main-repo/backend/ hf-space/backend/
 
-          # Keep Dockerfile and requirements.txt at root for HF build
-          cp main-repo/Dockerfile hf-space/Dockerfile
+          # Copy backend requirements.txt to root for HF build
           cp main-repo/backend/requirements.txt hf-space/requirements.txt
 
-          # Remove unneeded files/directories from backend copy
-          rm -rf hf-space/backend/scrapers
-          rm -f hf-space/backend/test_*.py
-          rm -f hf-space/backend/.env
+          # Clean up caches
           find hf-space/backend -type d -name "__pycache__" -exec rm -rf {} +
 
-          # Clean old mistaken top-level python packages if they exist
+          # Remove old top-level Python files (leftover from old deployments)
           find hf-space -maxdepth 1 -type f -name "*.py" -delete || true
+
+          # Remove old wrongly-deployed packages
           for d in api db schemas recommender; do
             if [ -d "hf-space/$d" ]; then
               rm -rf "hf-space/$d"
