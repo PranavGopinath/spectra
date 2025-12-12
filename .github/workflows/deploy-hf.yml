@@ -27,13 +27,24 @@ jobs:
 
       - name: Copy backend files
         run: |
-          cp -r main-repo/backend/* hf-space/
+          # Ensure backend folder exists at root and sync into it (preserve root files like Dockerfile/requirements)
+          mkdir -p hf-space/backend
+          rsync -av --delete --exclude ".git" main-repo/backend/ hf-space/backend/
+
+          # Keep requirements.txt at root for HF build
           cp main-repo/backend/requirements.txt hf-space/requirements.txt
-          rm -rf hf-space/scrapers
-          rm -f hf-space/test_*.py
-          rm -f hf-space/.env
-          rm -rf hf-space/__pycache__
-          find hf-space -type d -name "__pycache__" -exec rm -rf {} +
+
+          # Remove unneeded files/directories from backend copy
+          rm -rf hf-space/backend/scrapers
+          rm -f hf-space/backend/test_*.py
+          rm -f hf-space/backend/.env
+          find hf-space/backend -type d -name "__pycache__" -exec rm -rf {} +
+
+          # Clean old mistaken top-level python packages if they exist
+          find hf-space -maxdepth 1 -type f -name "*.py" -not -name "main.py" -delete || true
+          for d in api db schemas; do
+            [ -d "hf-space/$d" ] && rm -rf "hf-space/$d"
+          done
 
       - name: Commit and push to HF Space
         env:
