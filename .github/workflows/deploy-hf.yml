@@ -33,7 +33,8 @@ jobs:
           mkdir -p hf-space/backend
           rsync -av --delete --exclude ".git" main-repo/backend/ hf-space/backend/
 
-          # Keep requirements.txt at root for HF build
+          # Keep Dockerfile and requirements.txt at root for HF build
+          cp main-repo/Dockerfile hf-space/Dockerfile
           cp main-repo/backend/requirements.txt hf-space/requirements.txt
 
           # Remove unneeded files/directories from backend copy

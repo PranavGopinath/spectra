@@ -15,6 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Ensure backend modules are importable when code lives under /app/backend
+ENV PYTHONPATH="/app/backend"
+
 # Expose port (HF Spaces uses 7860)
 EXPOSE 7860
 
