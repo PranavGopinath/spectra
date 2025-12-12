@@ -13,7 +13,7 @@ interface ItemDetailModalProps {
   onClose: () => void;
   itemId: string;
   existingRating?: {
-    rating: number;
+    rating?: number;
     notes?: string;
     favorite?: boolean;
     want_to_consume?: boolean;
@@ -96,10 +96,10 @@ export default function ItemDetailModal({
     setError(null);
     
     try {
-      // If there's an existing rating, update it; otherwise create a minimal rating
+      // Only include rating if it exists - don't create a default rating
       await addRating(user.id, {
         item_id: item.id,
-        rating: existingRating?.rating || 1, // Use existing rating or default to 1
+        rating: existingRating?.rating, // Only use existing rating, don't default
         notes: existingRating?.notes,
         favorite: newFavorite,
         want_to_consume: wantToConsume,
@@ -121,10 +121,10 @@ export default function ItemDetailModal({
     setError(null);
     
     try {
-      // If there's an existing rating, update it; otherwise create a minimal rating
+      // Only include rating if it exists - don't create a default rating
       await addRating(user.id, {
         item_id: item.id,
-        rating: existingRating?.rating || 1, // Use existing rating or default to 1
+        rating: existingRating?.rating, // Only use existing rating, don't default
         notes: existingRating?.notes,
         favorite: favorite,
         want_to_consume: newWantToConsume,
@@ -299,7 +299,7 @@ export default function ItemDetailModal({
                           )}
 
                           {/* User Rating Section */}
-                          {existingRating ? (
+                          {existingRating?.rating ? (
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
                                 <Star className="w-5 h-5 text-secondary fill-secondary" />

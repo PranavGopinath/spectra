@@ -12,7 +12,7 @@ interface RatingDialogProps {
   onClose: () => void;
   item: RecommendationItem;
   existingRating?: {
-    rating: number;
+    rating?: number;
     notes?: string;
     favorite?: boolean;
     want_to_consume?: boolean;

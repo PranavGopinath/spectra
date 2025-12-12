@@ -24,7 +24,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased ${geist.className} ${geistMono.className} ${spaceGrotesk.variable}`}>
+      <body 
+        className={`font-sans antialiased ${geist.className} ${geistMono.className} ${spaceGrotesk.variable}`}
+        suppressHydrationWarning
+      >
         {children}
         <Analytics /> 
       </body>

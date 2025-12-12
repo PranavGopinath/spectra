@@ -12,7 +12,7 @@ interface RecommendationCardProps {
   onSelect?: (itemId: string) => void;
   onItemClick?: (itemId: string) => void;
   existingRating?: {
-    rating: number;
+    rating?: number;
     notes?: string;
     favorite?: boolean;
     want_to_consume?: boolean;
@@ -125,7 +125,7 @@ export default function RecommendationCard({
             >
               <Star className={`w-4 h-4 ${existingRating ? 'text-secondary fill-secondary' : 'text-muted-foreground'}`} />
               <span className="text-muted-foreground">
-                {existingRating ? `Rated ${existingRating.rating}/5` : 'Rate this'}
+                {existingRating?.rating ? `Rated ${existingRating.rating}/5` : 'Rate this'}
               </span>
             </button>
           )}

@@ -275,7 +275,7 @@ export interface UserResponse {
 
 export interface RatingRequest {
   item_id: string;
-  rating: number; // 1-5
+  rating?: number; // 1-5 (optional)
   notes?: string;
   favorite?: boolean;
   want_to_consume?: boolean;
@@ -285,7 +285,7 @@ export interface RatingResponse {
   id: string;
   user_id: string;
   item_id: string;
-  rating: number;
+  rating?: number;
   notes?: string;
   favorite?: boolean;
   want_to_consume?: boolean;

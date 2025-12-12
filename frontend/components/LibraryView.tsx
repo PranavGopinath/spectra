@@ -220,7 +220,7 @@ export default function LibraryView({ userId }: LibraryViewProps) {
                         </div>
                       </div>
                       
-                      {existingRating && (
+                      {existingRating?.rating && (
                         <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-lg bg-background/80 backdrop-blur-sm">
                           <Star className="w-3 h-3 text-secondary fill-secondary" />
                           <span className="text-xs font-semibold text-foreground">{existingRating.rating}/5</span>

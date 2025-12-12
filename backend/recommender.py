@@ -188,12 +188,19 @@ class SpectraRecommender:
         if not ratings:
             return None
         
+        # Filter out ratings without a rating value (NULL ratings from watchlist items)
+        # We can't compute a taste profile from items that weren't rated
+        rated_items = [r for r in ratings if r['rating'] is not None]
+        
+        if not rated_items:
+            return None
+        
         # Convert embeddings to numpy arrays and weight by rating
-        weights = np.array([r['rating'] for r in ratings])
+        weights = np.array([r['rating'] for r in rated_items])
         embeddings_384d = []
         taste_vectors_8d = []
         
-        for r in ratings:
+        for r in rated_items:
             # Handle different embedding formats (list, numpy array, pgvector type)
             embedding = r['embedding']
             if isinstance(embedding, (list, tuple)):
@@ -240,7 +247,7 @@ class SpectraRecommender:
             'embedding_384d': weighted_embedding,
             'taste_vector_8d': weighted_taste_vector,
             'breakdown': breakdown,
-            'num_ratings': len(ratings)
+            'num_ratings': len(rated_items)  # Only count items with actual ratings
         }
     
     def recommend_for_user(

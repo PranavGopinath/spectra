@@ -133,39 +133,44 @@ class UserRepository:
         self,
         user_id: str,
         item_id: str,
-        rating: int,
+        rating: Optional[int] = None,
         notes: Optional[str] = None,
         favorite: Optional[bool] = None,
         want_to_consume: Optional[bool] = None
     ) -> Dict:
         """Add or update a rating."""
-        query = """
-            INSERT INTO user_ratings (user_id, item_id, rating, notes, favorite, want_to_consume)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (user_id, item_id)
-            DO UPDATE SET 
-                rating = EXCLUDED.rating,
-                notes = COALESCE(EXCLUDED.notes, user_ratings.notes),
-                favorite = COALESCE(EXCLUDED.favorite, user_ratings.favorite),
-                want_to_consume = COALESCE(EXCLUDED.want_to_consume, user_ratings.want_to_consume),
-                updated_at = CURRENT_TIMESTAMP
-            RETURNING id, user_id, item_id, rating, notes, favorite, want_to_consume, created_at, updated_at
-        """
-        self.cursor.execute(query, (user_id, item_id, rating, notes, favorite, want_to_consume))
-        row = self.cursor.fetchone()
-        self.conn.commit()
-        
-        return {
-            'id': str(row[0]),
-            'user_id': str(row[1]),
-            'item_id': row[2],
-            'rating': row[3],
-            'notes': row[4],
-            'favorite': row[5],
-            'want_to_consume': row[6],
-            'created_at': row[7].isoformat() if row[7] else None,
-            'updated_at': row[8].isoformat() if row[8] else None
-        }
+        try:
+            query = """
+                INSERT INTO user_ratings (user_id, item_id, rating, notes, favorite, want_to_consume)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (user_id, item_id)
+                DO UPDATE SET 
+                    rating = COALESCE(EXCLUDED.rating, user_ratings.rating),
+                    notes = COALESCE(EXCLUDED.notes, user_ratings.notes),
+                    favorite = COALESCE(EXCLUDED.favorite, user_ratings.favorite),
+                    want_to_consume = COALESCE(EXCLUDED.want_to_consume, user_ratings.want_to_consume),
+                    updated_at = CURRENT_TIMESTAMP
+                RETURNING id, user_id, item_id, rating, notes, favorite, want_to_consume, created_at, updated_at
+            """
+            self.cursor.execute(query, (user_id, item_id, rating, notes, favorite, want_to_consume))
+            row = self.cursor.fetchone()
+            self.conn.commit()
+            
+            return {
+                'id': str(row[0]),
+                'user_id': str(row[1]),
+                'item_id': row[2],
+                'rating': row[3],
+                'notes': row[4],
+                'favorite': row[5],
+                'want_to_consume': row[6],
+                'created_at': row[7].isoformat() if row[7] else None,
+                'updated_at': row[8].isoformat() if row[8] else None
+            }
+        except Exception as e:
+            # Rollback on any error to prevent aborted transaction state
+            self.conn.rollback()
+            raise
     
     def get_user_ratings(self, user_id: str) -> List[Dict]:
         """Get all ratings for a user with item details."""

@@ -18,7 +18,7 @@ interface ChatMessageProps {
   };
   isLoading?: boolean;
   userRatings?: Map<string, {
-    rating: number;
+    rating?: number;
     notes?: string;
     favorite?: boolean;
     want_to_consume?: boolean;

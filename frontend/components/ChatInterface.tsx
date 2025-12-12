@@ -68,6 +68,9 @@ export default function ChatInterface({ userId }: ChatInterfaceProps) {
       }
     } catch (error) {
       console.error('Failed to load user ratings:', error);
+      // Don't show onboarding if API is unavailable - user might have ratings
+      // Just continue with empty ratings map
+      setUserRatings(new Map());
     }
   };
 

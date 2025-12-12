@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any
 
 class RatingRequest(BaseModel):
     item_id: str = Field(..., description="Media item ID")
-    rating: int = Field(..., ge=1, le=5, description="Rating from 1-5")
+    rating: Optional[int] = Field(default=None, ge=1, le=5, description="Rating from 1-5 (optional)")
     notes: Optional[str] = Field(default=None, description="Optional notes/comments")
     favorite: Optional[bool] = Field(default=None, description="Mark as favorite")
     want_to_consume: Optional[bool] = Field(default=None, description="Add to My List")
@@ -16,7 +16,7 @@ class RatingResponse(BaseModel):
     id: str
     user_id: str
     item_id: str
-    rating: int
+    rating: Optional[int]
     notes: Optional[str]
     favorite: Optional[bool]
     want_to_consume: Optional[bool]
@@ -27,7 +27,7 @@ class RatingResponse(BaseModel):
 class UserRatingWithItem(BaseModel):
     id: str
     item_id: str
-    rating: int
+    rating: Optional[int]
     notes: Optional[str]
     favorite: Optional[bool]
     want_to_consume: Optional[bool]
