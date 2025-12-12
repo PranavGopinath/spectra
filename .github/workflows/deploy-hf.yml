@@ -32,13 +32,22 @@ jobs:
           rm -rf hf-space/scrapers
           rm -f hf-space/test_*.py
           rm -f hf-space/.env
-          rm -rf hf-space/**/__pycache__
+          rm -rf hf-space/__pycache__
+          find hf-space -type d -name "__pycache__" -exec rm -rf {} +
 
       - name: Commit and push to HF Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          GIT_TERMINAL_PROMPT: 0
         run: |
           cd hf-space
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
           git add .
           if ! git diff --staged --quiet; then
-            g
+            git commit -m "Auto-deploy from GitHub: ${{ github.sha }}"
+            git push https://pranavgo:${HF_TOKEN}@huggingface.co/spaces/pranavgo/spectra main
+            echo "✅ Pushed to Hugging Face Space"
+          else
+            echo "No changes to deploy"
+          fi

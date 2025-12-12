@@ -1,6 +1,5 @@
 """FastAPI backend for Spectra recommendation engine."""
 
-# Trigger deployment
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
