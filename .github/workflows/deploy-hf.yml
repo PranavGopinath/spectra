@@ -41,8 +41,8 @@ jobs:
           find hf-space/backend -type d -name "__pycache__" -exec rm -rf {} +
 
           # Clean old mistaken top-level python packages if they exist
-          find hf-space -maxdepth 1 -type f -name "*.py" -not -name "main.py" -delete || true
-          for d in api db schemas; do
+          find hf-space -maxdepth 1 -type f -name "*.py" -delete || true
+          for d in api db schemas recommender; do
             [ -d "hf-space/$d" ] && rm -rf "hf-space/$d"
           done
 
