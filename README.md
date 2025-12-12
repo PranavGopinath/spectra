@@ -1,15 +1,11 @@
 # Spectra
 
-A recommendation engine that finds movies, music, and books with similar vibes—even if they're completely different genres. Rate what you love, and discover new favorites across all media types.
-
-## What It Does
-
-Instead of matching by genre ("thriller" → "thriller"), Spectra matches by aesthetic qualities. Love dark, complex psychological thrillers? You might also enjoy dark ambient music or dark, layered novels—even if they're not thrillers.
+A recommendation engine that finds movies, music, and books with similar vibes across different genres.
 
 **Key Features:**
 - Rate items (1-5 stars) to build your taste profile
 - Get personalized recommendations across movies, music, and books
-- See your taste visualized as an 8-dimensional radar chart
+- See your taste visualized as a cool radar chart
 - Discover content that *feels* similar, regardless of type
 
 ## Quick Start
@@ -51,7 +47,6 @@ Your taste profile is built from your ratings—higher ratings influence recomme
 - **Backend**: FastAPI, PostgreSQL + pgvector, Sentence Transformers
 - **Frontend**: Next.js, TypeScript, Tailwind CSS
 - **Matching**: 384D semantic embeddings for accurate recommendations
-- **Visualization**: 8D taste vectors for interpretable profiles
 
 ## Project Structure
 
@@ -60,7 +55,6 @@ spectra/
 ├── backend/          # FastAPI server
 ├── frontend/        # Next.js app
 ├── docker-compose.yml
-└── PLAN.md          # Detailed build plan
 ```
 
 ## License
