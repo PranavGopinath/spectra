@@ -190,13 +190,24 @@ class SpectraRecommender:
         
         # Filter out ratings without a rating value (NULL ratings from watchlist items)
         # We can't compute a taste profile from items that weren't rated
-        rated_items = [r for r in ratings if r['rating'] is not None]
+        # Also ensure rating is a valid integer (defensive check)
+        rated_items = [
+            r for r in ratings 
+            if r.get('rating') is not None 
+            and isinstance(r.get('rating'), (int, float))
+            and not (isinstance(r.get('rating'), float) and r.get('rating') != int(r.get('rating')))
+        ]
         
         if not rated_items:
             return None
         
         # Convert embeddings to numpy arrays and weight by rating
-        weights = np.array([r['rating'] for r in rated_items])
+        # Ensure all ratings are integers (defensive check)
+        try:
+            weights = np.array([int(r['rating']) for r in rated_items])
+        except (ValueError, TypeError) as e:
+            logger.error(f"Error converting ratings to integers: {e}")
+            return None
         embeddings_384d = []
         taste_vectors_8d = []
         
