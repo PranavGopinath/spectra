@@ -20,7 +20,9 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git clone https://pranavgo:${HF_TOKEN}@huggingface.co/spaces/pranavgo/spectra hf-space || true
+          # Clean clone of the existing HF Space repo
+          rm -rf hf-space
+          git clone https://pranavgo:${HF_TOKEN}@huggingface.co/spaces/pranavgo/spectra hf-space
           cd hf-space
           git remote set-url origin https://pranavgo:${HF_TOKEN}@huggingface.co/spaces/pranavgo/spectra
           git pull origin main || true
@@ -43,7 +45,9 @@ jobs:
           # Clean old mistaken top-level python packages if they exist
           find hf-space -maxdepth 1 -type f -name "*.py" -delete || true
           for d in api db schemas recommender; do
-            [ -d "hf-space/$d" ] && rm -rf "hf-space/$d"
+            if [ -d "hf-space/$d" ]; then
+              rm -rf "hf-space/$d"
+            fi
           done
 
       - name: Commit and push to HF Space
