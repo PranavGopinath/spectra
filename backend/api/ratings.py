@@ -58,7 +58,11 @@ async def get_user_ratings(
             raise HTTPException(status_code=404, detail="User not found")
         
         ratings = recommender.db.user.get_user_ratings(user_id)
-        return {"ratings": ratings}
+
+        # Drop entries that have no numeric rating to avoid response validation errors
+        cleaned_ratings = [r for r in ratings if r.get("rating") is not None]
+
+        return {"ratings": cleaned_ratings}
     except HTTPException:
         raise
     except Exception as e:

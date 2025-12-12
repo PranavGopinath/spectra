@@ -181,7 +181,7 @@ class UserRepository:
                 mi.title, mi.media_type, mi.year, mi.description, mi.metadata
             FROM user_ratings ur
             JOIN media_items mi ON ur.item_id = mi.id
-            WHERE ur.user_id = %s
+            WHERE ur.user_id = %s AND ur.rating IS NOT NULL
             ORDER BY ur.updated_at DESC
         """
         self.cursor.execute(query, (user_id,))
@@ -215,7 +215,7 @@ class UserRepository:
             SELECT ur.rating, mi.embedding, mi.taste_vector
             FROM user_ratings ur
             JOIN media_items mi ON ur.item_id = mi.id
-            WHERE ur.user_id = %s
+            WHERE ur.user_id = %s AND ur.rating IS NOT NULL
         """
         self.cursor.execute(query, (user_id,))
         rows = self.cursor.fetchall()
