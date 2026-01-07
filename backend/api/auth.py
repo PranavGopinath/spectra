@@ -148,8 +148,14 @@ async def oauth_authorize(
         raise HTTPException(status_code=500, detail="GitHub OAuth not configured")
     
     # OAuth callback goes to backend, which then redirects to frontend
-    backend_url = os.getenv('BACKEND_URL', 'http://localhost:8000').strip()
+    backend_url = os.getenv('BACKEND_URL', 'http://localhost:8000').strip().rstrip('/')
     redirect_uri = f"{backend_url}/api/auth/oauth/{provider}/callback"
+    
+    # Log to both logger and print (print shows in Railway logs more reliably)
+    debug_msg = f"OAuth {provider}: BACKEND_URL='{backend_url}', redirect_uri='{redirect_uri}'"
+    logger.info(debug_msg)
+    print(debug_msg)  # Print also shows in Railway logs
+    
     return await oauth.__getattr__(provider).authorize_redirect(request, redirect_uri)
 
 
