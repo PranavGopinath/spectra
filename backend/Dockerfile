@@ -15,9 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Expose port (HF Spaces uses 7860)
-EXPOSE 7860
+# Expose port (Render uses PORT env var)
+EXPOSE ${PORT:-8000}
 
-# Run the application
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "7860"]
-
+# Run the application (main:app since build context is backend/)
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}

@@ -11,3 +11,4 @@ ALTER COLUMN rating DROP NOT NULL;
 -- Re-add the CHECK constraint but allow NULL
 ALTER TABLE user_ratings 
 ADD CONSTRAINT user_ratings_rating_check CHECK (rating IS NULL OR (rating >= 1 AND rating <= 5));
+
