@@ -133,7 +133,7 @@ class UserRepository:
         self,
         user_id: str,
         item_id: str,
-        rating: Optional[int] = None,
+        rating: Optional[float] = None,
         notes: Optional[str] = None,
         favorite: Optional[bool] = None,
         want_to_consume: Optional[bool] = None

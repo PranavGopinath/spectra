@@ -125,7 +125,9 @@ export default function RecommendationCard({
             >
               <Star className={`w-4 h-4 ${existingRating ? 'text-secondary fill-secondary' : 'text-muted-foreground'}`} />
               <span className="text-muted-foreground">
-                {existingRating?.rating ? `Rated ${existingRating.rating}/5` : 'Rate this'}
+                {existingRating?.rating 
+                  ? `Rated ${existingRating.rating % 1 === 0 ? existingRating.rating.toFixed(0) : existingRating.rating.toFixed(1)}/5` 
+                  : 'Rate this'}
               </span>
             </button>
           )}

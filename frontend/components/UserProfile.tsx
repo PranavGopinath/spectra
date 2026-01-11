@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Star, Heart, Bookmark, Trash2, TrendingUp } from 'lucide-react';
+import { Heart, Bookmark, Trash2, TrendingUp } from 'lucide-react';
 import { getUserRatings, deleteRating, UserRatingWithItem, UserResponse } from '@/lib/api';
 import { getCurrentUser } from '@/lib/auth';
 import TasteRadar from './TasteRadar';
 import RecommendationCard from './RecommendationCard';
 import MediaMosaic from './MediaMosaic';
 import { Card } from '@/components/ui/card';
+import StarRating from './StarRating';
 
 interface UserProfileProps {
   user: UserResponse;
@@ -203,19 +204,15 @@ export default function UserProfile({ user, dimensionNames, onRatingDeleted }: U
                     
                     {rating.rating !== undefined && (
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-5 h-5 ${
-                                i < rating.rating!
-                                  ? 'text-secondary fill-secondary'
-                                  : 'text-muted-foreground/30'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-sm text-muted-foreground">{rating.rating}/5</span>
+                        <StarRating
+                          value={rating.rating!}
+                          onChange={() => {}} // Read-only in profile view
+                          size={20}
+                          readonly={true}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {rating.rating! % 1 === 0 ? rating.rating!.toFixed(0) : rating.rating!.toFixed(1)}/5
+                        </span>
                       </div>
                     )}
 

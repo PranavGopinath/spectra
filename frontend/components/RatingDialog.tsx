@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Send } from 'lucide-react';
+import { X, Send } from 'lucide-react';
 import { addRating, RatingRequest, RecommendationItem } from '@/lib/api';
 import { getCurrentUser } from '@/lib/auth';
 import { Card } from '@/components/ui/card';
+import StarRating from './StarRating';
 
 interface RatingDialogProps {
   isOpen: boolean;
@@ -103,25 +104,16 @@ export default function RatingDialog({
                   <label className="block text-sm font-medium text-foreground mb-3">
                     Your Rating
                   </label>
-                  <div className="flex items-center gap-2">
-                    {[1, 2, 3, 4, 5].map((value) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => setRating(value)}
-                        className="focus:outline-none"
-                      >
-                        <Star
-                          className={`w-8 h-8 transition-all ${
-                            value <= rating
-                              ? 'text-secondary fill-secondary'
-                              : 'text-muted-foreground/30 hover:text-secondary/50'
-                          }`}
-                        />
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-3">
+                    <StarRating
+                      value={rating}
+                      onChange={setRating}
+                      size={40}
+                    />
                     {rating > 0 && (
-                      <span className="ml-2 text-muted-foreground text-sm">{rating}/5</span>
+                      <span className="text-muted-foreground text-sm font-medium">
+                        {rating % 1 === 0 ? rating.toFixed(0) : rating.toFixed(1)}/5
+                      </span>
                     )}
                   </div>
                 </div>
