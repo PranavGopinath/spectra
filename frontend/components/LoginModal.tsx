@@ -239,7 +239,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, canClose = true, 
                     setIsLoginMode(!isLoginMode);
                     setError(null);
                   }}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-muted-foreground hover:text-foreground hover:underline transition-all"
                 >
                   {isLoginMode 
                     ? "Don't have an account? Sign up"
