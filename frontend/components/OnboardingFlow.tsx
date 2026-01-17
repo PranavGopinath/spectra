@@ -107,7 +107,7 @@ export default function OnboardingFlow({ userId, onComplete, onSkip }: Onboardin
       return 'Please rate at least 1 book';
     }
     if (counts.music === 0) {
-      return 'Please rate at least 1 music/artist';
+      return 'Please rate at least 1 artist';
     }
     
     return null;
