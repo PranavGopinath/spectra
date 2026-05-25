@@ -42,6 +42,11 @@ class DatabaseConnection:
         """Make sure the underlying connection is alive."""
         if self._conn is None or self._conn.closed:
             self._connect()
+        else:
+            try:
+                self._conn.cursor().execute("SELECT 1")
+            except Exception:
+                self._connect()
         return self._conn
 
     def _ensure_cursor(self):
