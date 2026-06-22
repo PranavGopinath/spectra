@@ -35,6 +35,11 @@ class DatabaseConnection:
             except Exception:
                 pass
         self._conn = psycopg2.connect(self.connection_string)
+        # Ensure pgvector extension exists before registering the type
+        _cur = self._conn.cursor()
+        _cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        self._conn.commit()
+        _cur.close()
         register_vector(self._conn)
         self._cursor = self._conn.cursor()
 

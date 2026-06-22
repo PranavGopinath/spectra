@@ -263,5 +263,9 @@ def fetch_and_store_books(num_books: int = 250):
 
 
 if __name__ == "__main__":
-    fetch_and_store_books(num_books=250)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--count', type=int, default=1000)
+    args = parser.parse_args()
+    fetch_and_store_books(num_books=args.count)
 

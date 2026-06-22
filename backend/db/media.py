@@ -154,6 +154,43 @@ class MediaRepository:
             'taste_vector': taste_vector
         }
     
+    POPULARITY_KEY = {
+        'movie': 'tmdb_rating',
+        'book': 'ratings_count',
+        'music': 'listeners',
+    }
+
+    def get_popular_by_type(self, media_type: str, limit: int = 200) -> List[Dict]:
+        """Get items of a specific type sorted by external popularity metric."""
+        pop_key = self.POPULARITY_KEY.get(media_type, 'tmdb_rating')
+        query = """
+            SELECT id, title, media_type, year, description, metadata
+            FROM media_items
+            WHERE media_type = %s
+            ORDER BY CAST(metadata->>%s AS FLOAT) DESC NULLS LAST
+            LIMIT %s
+        """
+        self.cursor.execute(query, (media_type, pop_key, limit))
+        rows = self.cursor.fetchall()
+
+        results = []
+        for row in rows:
+            metadata = row[5]
+            if isinstance(metadata, str):
+                try:
+                    metadata = json.loads(metadata)
+                except (json.JSONDecodeError, TypeError):
+                    metadata = {}
+            results.append({
+                'id': row[0],
+                'title': row[1],
+                'media_type': row[2],
+                'year': row[3],
+                'description': row[4],
+                'metadata': metadata,
+            })
+        return results
+
     def get_all_by_type(self, media_type: str, limit: int = 100) -> List[Dict]:
         """Get all items of a specific media type."""
         query = """

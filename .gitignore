@@ -31,6 +31,11 @@
 *.test.ts
 /backend/test_main.py
 
+# Environment
+.env
+.env.local
+.env*.local
+
 # Misc
 .DS_Store
 *.pem

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Film, Music, BookOpen, Loader2, Sparkles, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Film, Music, BookOpen, Loader2, Sparkles, Star, Search, X } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getOnboardingItems, submitInitialPreferences, OnboardingMediaItem, OnboardingRating } from '@/lib/api';
@@ -37,6 +37,7 @@ export default function OnboardingFlow({ userId, onComplete, onSkip }: Onboardin
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'movie' | 'book' | 'music'>('movie');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadItems();
@@ -98,18 +99,9 @@ export default function OnboardingFlow({ userId, onComplete, onSkip }: Onboardin
   };
 
   const validateRatings = (): string | null => {
-    const counts = getRatingsByCategory();
-    
-    if (counts.movie === 0) {
-      return 'Please rate at least 1 movie';
+    if (ratings.size === 0) {
+      return 'Please rate at least 1 item to continue';
     }
-    if (counts.book === 0) {
-      return 'Please rate at least 1 book';
-    }
-    if (counts.music === 0) {
-      return 'Please rate at least 1 artist';
-    }
-    
     return null;
   };
 
@@ -148,18 +140,32 @@ export default function OnboardingFlow({ userId, onComplete, onSkip }: Onboardin
   const getCurrentItems = () => {
     if (!items) return [];
     switch (activeTab) {
-      case 'movie':
-        return items.movies;
-      case 'book':
-        return items.books;
-      case 'music':
-        return items.music;
+      case 'movie': return items.movies;
+      case 'book':  return items.books;
+      case 'music': return items.music;
     }
+  };
+
+  const getDisplayedItems = () => {
+    const all = getCurrentItems();
+    if (!searchQuery.trim()) return all.slice(0, 50);
+    const q = searchQuery.toLowerCase();
+    return all.filter(item =>
+      item.title.toLowerCase().includes(q) ||
+      item.metadata?.director?.toLowerCase().includes(q) ||
+      item.metadata?.author?.toLowerCase().includes(q) ||
+      item.metadata?.artist?.toLowerCase().includes(q)
+    );
+  };
+
+  const handleTabChange = (tab: 'movie' | 'book' | 'music') => {
+    setActiveTab(tab);
+    setSearchQuery('');
   };
 
   const counts = getRatingsByCategory();
   const totalRated = ratings.size;
-  const canSubmit = counts.movie > 0 && counts.book > 0 && counts.music > 0;
+  const canSubmit = ratings.size > 0;
 
   return (
     <div className="relative min-h-screen w-full">
@@ -183,13 +189,8 @@ export default function OnboardingFlow({ userId, onComplete, onSkip }: Onboardin
               <h1 className="text-4xl font-bold text-foreground mb-2">
                 Welcome to Spectra!
               </h1>
-              <p className="text-muted-foreground text-lg mb-2">
+              <p className="text-muted-foreground text-lg">
                 Rate movies, books, and music you know to help us understand your taste.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Please rate at least <span className="font-semibold text-foreground">1 movie</span>,{' '}
-                <span className="font-semibold text-foreground">1 book</span>, and{' '}
-                <span className="font-semibold text-foreground">1 artist</span> to continue.
               </p>
             </div>
 
@@ -250,7 +251,7 @@ export default function OnboardingFlow({ userId, onComplete, onSkip }: Onboardin
                     return (
                       <button
                         key={tab}
-                        onClick={() => setActiveTab(tab)}
+                        onClick={() => handleTabChange(tab)}
                         className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 ${
                           activeTab === tab
                             ? 'border-primary text-primary'
@@ -272,10 +273,35 @@ export default function OnboardingFlow({ userId, onComplete, onSkip }: Onboardin
                   })}
                 </div>
 
+                {/* Search */}
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder={`Search ${categoryLabels[activeTab].toLowerCase()}...`}
+                    className="w-full pl-9 pr-9 py-2 text-sm rounded-lg border border-border bg-background/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
                 {/* Items Grid */}
                 <div className="max-h-[500px] overflow-y-auto mb-6">
+                  {!searchQuery && (
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Showing top {Math.min(50, getCurrentItems().length)} popular — search to find more
+                    </p>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {getCurrentItems()?.map((item, index) => {
+                    {getDisplayedItems().map((item, index) => {
                       const currentRating = getRatingForItem(item.id);
                       return (
                         <motion.div
@@ -283,59 +309,64 @@ export default function OnboardingFlow({ userId, onComplete, onSkip }: Onboardin
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.03 }}
-                          className={`p-4 rounded-lg border-2 transition-all ${
+                          className={`p-3 rounded-lg border-2 transition-all ${
                             currentRating > 0
                               ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20'
                               : 'border-border bg-background/50 hover:border-primary/50 hover:bg-background/70'
                           }`}
                         >
-                          <div className="mb-2">
-                            <h3 className="font-semibold text-foreground text-sm line-clamp-2 mb-1">
-                              {item.title}
-                            </h3>
-                            {item.year && (
-                              <p className="text-xs text-muted-foreground mb-2">
-                                {item.year}
-                              </p>
-                            )}
-                          </div>
-                          
-                          {/* Rating Stars */}
-                          <div className="flex items-center gap-1 mb-2">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setItemRating(item.id, star);
-                                }}
-                                className="focus:outline-none transition-transform hover:scale-110"
-                                onMouseEnter={(e) => {
-                                  // Optional: Add hover effect
-                                }}
-                              >
-                                <Star
-                                  className={`w-5 h-5 transition-colors ${
-                                    star <= currentRating
-                                      ? 'text-secondary fill-secondary'
-                                      : 'text-muted-foreground/30 hover:text-secondary/50'
-                                  }`}
+                          <div className="flex gap-3">
+                            {(() => {
+                              const imageUrl = item.metadata?.poster_url
+                                || item.metadata?.image_url
+                                || item.metadata?.cover_url
+                                || item.metadata?.thumbnail;
+                              return imageUrl ? (
+                                <img
+                                  src={imageUrl}
+                                  alt={item.title}
+                                  className="w-10 h-14 object-cover rounded flex-shrink-0"
                                 />
-                              </button>
-                            ))}
-                            {currentRating > 0 && (
-                              <span className="ml-2 text-xs text-muted-foreground">
-                                {currentRating}/5
-                              </span>
-                            )}
+                              ) : null;
+                            })()}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-foreground text-sm line-clamp-2 mb-0.5">
+                                {item.title}
+                              </h3>
+                              {item.year && (
+                                <p className="text-xs text-muted-foreground mb-1">
+                                  {item.year}
+                                </p>
+                              )}
+                              {/* Rating Stars */}
+                              <div className="flex items-center gap-0.5">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <button
+                                    key={star}
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setItemRating(item.id, star);
+                                    }}
+                                    className="focus:outline-none transition-transform hover:scale-110"
+                                  >
+                                    <Star
+                                      className={`w-4 h-4 transition-colors ${
+                                        star <= currentRating
+                                          ? 'text-secondary fill-secondary'
+                                          : 'text-muted-foreground/30 hover:text-secondary/50'
+                                      }`}
+                                    />
+                                  </button>
+                                ))}
+                                {currentRating > 0 && (
+                                  <span className="ml-1 text-xs text-muted-foreground">
+                                    {currentRating}/5
+                                  </span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-
-                          {item.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-2">
-                              {item.description}
-                            </p>
-                          )}
                         </motion.div>
                       );
                     })}
@@ -348,7 +379,7 @@ export default function OnboardingFlow({ userId, onComplete, onSkip }: Onboardin
                     <span className="font-semibold text-foreground">{totalRated}</span> item{totalRated !== 1 ? 's' : ''} rated
                     {!canSubmit && (
                       <span className="ml-2 text-destructive">
-                        • Rate at least 1 movie, 1 book, and 1 artist to continue
+                        • Rate at least 1 item to continue
                       </span>
                     )}
                   </p>

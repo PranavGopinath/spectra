@@ -19,4 +19,4 @@ ENV NEXT_PUBLIC_API_URL=http://localhost:8000
 
 # Run dev server in development mode
 # For production, use: CMD ["npm", "run", "start"]
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
